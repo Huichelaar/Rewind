@@ -1,0 +1,21 @@
+// Rewind: Add menu option that allows player to rewind actions.
+// Instead of saving after each action, this patch records all
+// changes introduced by every action. Rewind can then undo
+// these changes.
+#ifndef _FE8_
+    ERROR "You're not assembling to an FE8 ROM!"
+#endif
+
+#include "Extensions/Hack Installation.txt"
+#include "EAstdlib.event"
+
+#ifndef FreeSpace
+	#define FreeSpace 0x1000000
+	ORG FreeSpace
+#endif
+
+#include src/ExpandedModularSave/ExModularSave.event
+#include src/EA.event
+
+//#include "src/C/main.event"
+//#include "src/asm/asm.event"
