@@ -1,0 +1,20 @@
+
+PUSH
+
+  // Run an additional routine when starting chapters
+  // TODO this could be moved to a generic ChapterBeginCalcloop.
+  ORG 0x59A23C
+  POIN REW_chapterBeginCalcLoop | 1
+
+POP
+
+ALIGN 4; REW_clearRewindBuf:
+#include "clearRewindBuf.lyn.event"
+
+ALIGN 4; REW_chapterBeginCalcLoop:
+#include "chapterBeginCalcLoop.lyn.event"
+
+ALIGN 4; REW_chapterBeginCalcLoopEntries:    // 0-terminated
+POIN 0x85971    // SetEventId_0x84. Calcloop replaced this call.
+POIN REW_clearRewindBuf | 1
+WORD 0

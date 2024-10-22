@@ -14,8 +14,20 @@
 	ORG FreeSpace
 #endif
 
-#include src/ExpandedModularSave/ExModularSave.event
-#include src/EA.event
+// Buffer candidates:
+//  - 0x200 41C8      left oamdata buffer,    during banims room for 0x5800 bytes, otherwise 0x64(?).
+//  - 0x200 99C8      right oamdata buffer,   during banims room for 0x5800 bytes, otherwise 0x910(?).
+//  - 0x200 F1C8      left framedata buffer,  during banims room for 0x2A00 bytes, otherwise 0x1FB4(?).
+//  - 0x201 1BC8      right framedata buffer, during banims room for 0x2A00 bytes, otherwise 0x604(?).
+//
+// Limits are assumed on decomp symbols.
+#define REW_rewindBufferLarge 0x200F1C8
+#define REW_rewindBufferSmall 0x20099C8
 
+// Save space size for rewind.
+#define REW_rewindBufferSize 0x1DC0
+
+#include "src/ExpandedModularSave/ExModularSave.event"
+#include "src/EA.event"
+#include "src/asm/asm.event"
 //#include "src/C/main.event"
-//#include "src/asm/asm.event"

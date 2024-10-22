@@ -21,11 +21,11 @@
 ALIGN 4
 gSaveBlockDecl:
 	//    offst type // desc
-	SHORT $2F4C 0    // 0: game 1
-	SHORT $4290 0    // 1: game 2
-	SHORT $55D4 0    // 2: game 3
+	SHORT $4290 0    // 0: game 1
+	SHORT $55D4 0    // 1: game 2
+	SHORT $55D4 0    // 2: game 3 (unused, same as game 2)
 	SHORT $00D4 1    // 3: suspend 1
-	SHORT $00D4 1    // 4: suspend 2 (now same as suspend 1)
+	SHORT $00D4 1    // 4: suspend 2 (unused, same as suspend 1)
 
 	// We don't change the two last blocks from vanilla, for the best
 	SHORT $691C 2    // 5: link arena
@@ -82,6 +82,8 @@ gSaveBlockTypeSizeLookup:
 #include "SrcModules/ReadWriteSupplyItems.lyn.event" // Convoy module
 
 #include "SrcModules/SaveUnitExpanded.lyn.event" // Regular.
+
+#include "CustomModules/rewind.lyn.event" // Rewind.
 
 //DebuffTablePointer: // required for debuffs module
 	//WORD DebuffTableRam
@@ -182,13 +184,16 @@ gSuspendSaveChunks:
 	//DeclSaveChunk($23ED, DebuffTableSize, SUD_SaveDebuffs,  SUD_LoadDebuffs)
 
 	// Permanent eids (moved here because of a mistake in the previous allocation)
-	DeclSaveChunk($282D, $0019, $0A3150+1, $0A3198+1)
+	DeclSaveChunk($23ED, $0019, $0A3150+1, $0A3198+1)
 
-	// $25AA
-	DeclSaveChunk($2846, $00C8, MSa_WriteSupplyItems, MSa_ReadSupplyItems)  // Convoy Items
+	// Convoy. Room for 100 items.
+	DeclSaveChunk($2406, $00C8, MSa_WriteSupplyItems, MSa_ReadSupplyItems)
 	
-	// ends at $290E
-	// free up to $2E78 ($56A free bytes)
+  // Rewind data.
+  DeclSaveChunk($24CE, REW_rewindBufferSize, REW_SaveRewindBuf, 0)
+  
+	// ends at $428E
+	// free up to $4290 ($2 free bytes)
 
 	DeclSaveChunk(0, 0, 0, MSu_LoadClaimFlagsFromParentSave) // Load Bonus Claim flags from parent save
 
