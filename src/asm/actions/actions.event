@@ -1,0 +1,14 @@
+// Hooks to different actions a unit can take.
+// Idea is to store action in rewind buffer so it can be rewound.
+
+PUSH
+
+  // Combat action.
+  ORG 0x32330
+    jumpToHack(REW_actionHookCombat)
+
+
+POP
+
+ALIGN 4; REW_actionHookCombat:
+#include "combat.lyn.event"

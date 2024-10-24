@@ -1,0 +1,2 @@
+// Hooks to different events that can execute during a chapter.
+// Idea is to store event results in rewind buffer so they can be rewound.

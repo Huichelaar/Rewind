@@ -12,10 +12,15 @@ REW_SaveRewindBuf:
 push  {r4, r14}
 mov   r4, r0    @ Target address (SRAM).
 
+@ Skip if suspend-save is during phasechange.
+ldr   r2, =gActionData
+ldrb  r2, [r2, #0x16]     @ Suspend type.
+cmp   r2, #0x9            @ SUSPEND_POINT_PHASECHANGE.
+beq   return
+
 @ Skip if there's no new rewind data to append.
 ldr   r2, =REW_rewindBufferSmall
-lsl   r2, #0x5
-lsr   r2, #0x5
+ldr   r2, [r2]
 ldr   r2, [r2]
 cmp   r2, #0x0
 ble   return
@@ -26,13 +31,11 @@ ble   return
 
   @ Append new rewind data.
   ldr   r0, =REW_rewindBufferLarge
-  lsl   r0, #0x5
-  lsr   r0, #0x5
+  ldr   r0, [r0]
   ldr   r1, [r0]  @ Offset of end of existing rewind data.
   add   r1, r0    @ Target.
   ldr   r0, =REW_rewindBufferSmall
-  lsl   r0, #0x5
-  lsr   r0, #0x5
+  ldr   r0, [r0]
   ldr   r2, [r0]  @ Size of new rewind data.
   add   r0, #0x4  @ Source.
 
@@ -45,12 +48,10 @@ ble   return
 
   @ Adjust offset of end of existing rewind data.
   ldr   r0, =REW_rewindBufferLarge
-  lsl   r0, #0x5
-  lsr   r0, #0x5  @ Source address.
+  ldr   r0, [r0]  @ Source address.
   ldr   r1, [r0]
   ldr   r2, =REW_rewindBufferSmall
-  lsl   r2, #0x5
-  lsr   r2, #0x5
+  ldr   r2, [r2]
   ldr   r2, [r2]
   add   r2, r1
   str   r2, [r0]  @ Target size.
@@ -75,12 +76,11 @@ REW_LoadRewindBuf:
 @ We don't need to do anything after the function call
 @ so we just don't bother making it return here at all.
 
-@ implied     @ ReadSramFast arg r0 = source address.
-mov r2, r1    @ ReadSramFast arg r2 = size.
-ldr r1, =REW_rewindBufferLarge
-lsl r1, #0x5
-lsr r1, #0x5  @ ReadSramFast arg r1 = target address.
-ldr r3, =ReadSramFast
-ldr r3, [r3]
+@ implied       @ ReadSramFast arg r0 = source address.
+mov   r2, r1    @ ReadSramFast arg r2 = size.
+ldr   r1, =REW_rewindBufferLarge
+ldr   r1, [r1]  @ ReadSramFast arg r1 = target address.
+ldr   r3, =ReadSramFast
+ldr   r3, [r3]
 GOTO_R3:
-bx  r3
+bx    r3
