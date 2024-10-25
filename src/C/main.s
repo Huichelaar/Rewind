@@ -11,8 +11,64 @@
 	.file	"main.c"
 	.text
 	.align	1
-	.global	REW_createBufferEntry
+	.global	REW_procEnd
 	.arch armv4t
+	.syntax unified
+	.code	16
+	.thumb_func
+	.fpu softvfp
+	.type	REW_procEnd, %function
+REW_procEnd:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	push	{r4, lr}
+	ldr	r3, .L2
+	@ sp needed
+	bl	.L4
+	pop	{r4}
+	pop	{r0}
+	bx	r0
+.L3:
+	.align	2
+.L2:
+	.word	UnlockGameLogic
+	.size	REW_procEnd, .-REW_procEnd
+	.align	1
+	.global	REW_rewindMenuEffect
+	.syntax unified
+	.code	16
+	.thumb_func
+	.fpu softvfp
+	.type	REW_rewindMenuEffect, %function
+REW_rewindMenuEffect:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	push	{r4, lr}
+	ldr	r3, .L6
+	@ sp needed
+	bl	.L4
+	ldr	r3, .L6+4
+	bl	.L4
+	movs	r1, #3
+	ldr	r0, .L6+8
+	ldr	r3, .L6+12
+	bl	.L4
+	movs	r0, #23
+	pop	{r4}
+	pop	{r1}
+	bx	r1
+.L7:
+	.align	2
+.L6:
+	.word	Text_ResetTileAllocation
+	.word	LockGameLogic
+	.word	.LANCHOR0
+	.word	ProcStart
+	.size	REW_rewindMenuEffect, .-REW_rewindMenuEffect
+	.align	1
+	.global	REW_createBufferEntry
 	.syntax unified
 	.code	16
 	.thumb_func
@@ -23,7 +79,7 @@ REW_createBufferEntry:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	@ link register save eliminated.
-	ldr	r3, .L4
+	ldr	r3, .L11
 	ldr	r2, [r3]
 	ldr	r3, [r2]
 	adds	r3, r2, r3
@@ -31,28 +87,28 @@ REW_createBufferEntry:
 	ldr	r1, [r2, #4]
 	adds	r0, r0, #8
 	cmp	r1, #0
-	beq	.L2
+	beq	.L9
 	str	r0, [r1, #4]
-.L2:
+.L9:
 	@ sp needed
 	str	r1, [r3, #8]
 	movs	r3, #0
 	str	r3, [r0, #4]
 	str	r0, [r2, #4]
 	bx	lr
-.L5:
+.L12:
 	.align	2
-.L4:
+.L11:
 	.word	REW_rewindBufferSmall
 	.size	REW_createBufferEntry, .-REW_createBufferEntry
 	.align	1
-	.global	REW_recordCombatUnit
+	.global	REW_storeCombatEntry
 	.syntax unified
 	.code	16
 	.thumb_func
 	.fpu softvfp
-	.type	REW_recordCombatUnit, %function
-REW_recordCombatUnit:
+	.type	REW_storeCombatEntry, %function
+REW_storeCombatEntry:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 80
 	@ frame_needed = 0, uses_anonymous_args = 0
@@ -61,12 +117,11 @@ REW_recordCombatUnit:
 	movs	r7, r0
 	sub	sp, sp, #84
 	str	r2, [sp, #4]
-	add	r1, sp, #8
+	ldr	r3, .L33
 	movs	r2, #36
-	movs	r5, r3
+	add	r1, sp, #8
 	movs	r0, r4
-	ldr	r3, .L26
-	bl	.L28
+	bl	.L4
 	ldrb	r1, [r7, #26]
 	ldrb	r3, [r4, #26]
 	ldr	r2, [r7, #4]
@@ -90,7 +145,7 @@ REW_recordCombatUnit:
 	ldrb	r3, [r3]
 	lsls	r3, r3, #24
 	asrs	r3, r3, #24
-	beq	.L7
+	beq	.L14
 	movs	r3, r4
 	adds	r3, r3, #81
 	ldrb	r3, [r3]
@@ -101,15 +156,15 @@ REW_recordCombatUnit:
 	adds	r2, r2, #72
 	ldrh	r2, [r2]
 	strh	r2, [r3, #6]
-.L7:
+.L14:
 	movs	r1, #111
 	ldrsb	r1, [r4, r1]
 	cmp	r1, #0
-	blt	.L8
-	ldr	r3, .L26+4
+	blt	.L15
+	ldr	r3, .L33+4
 	add	r0, sp, #8
-	bl	.L28
-.L8:
+	bl	.L4
+.L15:
 	movs	r2, r4
 	add	r3, sp, #8
 	adds	r2, r2, #115
@@ -161,13 +216,13 @@ REW_recordCombatUnit:
 	add	r2, sp, #8
 	movs	r0, r2
 	strb	r3, [r2, #25]
-	ldr	r3, .L26+8
-	bl	.L28
+	ldr	r3, .L33+8
+	bl	.L4
 	movs	r0, r4
-	ldr	r3, .L26+12
-	bl	.L28
+	ldr	r3, .L33+12
+	bl	.L4
 	cmp	r0, #0
-	ble	.L9
+	ble	.L16
 	movs	r3, r4
 	adds	r3, r3, #80
 	ldrb	r3, [r3]
@@ -175,70 +230,73 @@ REW_recordCombatUnit:
 	adds	r3, r3, r2
 	adds	r3, r3, #40
 	strb	r0, [r3]
-.L9:
+.L16:
 	movs	r1, r4
 	movs	r0, #30
 	add	r3, sp, #8
 	movs	r2, #10
 	adds	r1, r1, #30
 	adds	r0, r0, r3
-	ldr	r3, .L26+16
-	bl	.L28
-	ldr	r3, .L26+20
+	ldr	r3, .L33+16
+	bl	.L4
+	ldr	r3, .L33+20
 	add	r0, sp, #8
-	bl	.L28
+	bl	.L4
+	movs	r5, #2
 	movs	r6, #0
-.L11:
+.L18:
 	add	r3, sp, #8
-	ldrb	r3, [r6, r3]
+	ldrb	r3, [r3, r6]
 	ldrb	r2, [r7, r6]
 	subs	r3, r3, r2
 	lsls	r3, r3, #24
 	lsrs	r3, r3, #24
-	beq	.L10
+	beq	.L17
 	ldr	r2, [sp, #4]
 	adds	r2, r2, r5
 	strb	r6, [r2, #12]
 	strb	r3, [r2, #13]
 	adds	r5, r5, #2
-.L10:
+.L17:
 	adds	r6, r6, #1
 	cmp	r6, #72
-	bne	.L11
-	ldr	r3, .L26+24
+	bne	.L18
+	ldr	r3, .L33+24
 	ldrh	r3, [r3]
 	lsls	r3, r3, #28
-	bpl	.L12
+	bpl	.L19
 	adds	r4, r4, #72
 	ldrh	r0, [r4]
-	ldr	r3, .L26+28
-	bl	.L28
+	ldr	r3, .L33+28
+	bl	.L4
 	add	r3, sp, #8
 	movs	r4, r0
 	ldrb	r0, [r3, #28]
-	ldr	r3, .L26+32
-	bl	.L28
+	ldr	r3, .L33+32
+	bl	.L4
 	ldrb	r0, [r0, #6]
 	subs	r0, r4, r0
 	lsls	r0, r0, #24
 	lsrs	r0, r0, #24
-	beq	.L12
+	beq	.L19
 	ldr	r3, [sp, #4]
-	adds	r2, r3, r5
-	strb	r6, [r2, #12]
-	strb	r0, [r2, #13]
+	adds	r3, r3, r5
+	strb	r6, [r3, #12]
+	strb	r0, [r3, #13]
 	adds	r5, r5, #2
-.L12:
+.L19:
+	ldr	r3, [sp, #4]
 	lsls	r0, r5, #16
 	lsrs	r0, r0, #16
+	strh	r0, [r3, #12]
 	add	sp, sp, #84
 	@ sp needed
 	pop	{r4, r5, r6, r7}
 	pop	{r1}
 	bx	r1
-.L27:
+.L34:
 	.align	2
-.L26:
+.L33:
 	.word	CpuSet
 	.word	SetUnitStatus
 	.word	UnitCheckStatCaps
@@ -248,7 +306,7 @@ REW_recordCombatUnit:
 	.word	gBattleStats
 	.word	GetItemUses
 	.word	GetTrap
-	.size	REW_recordCombatUnit, .-REW_recordCombatUnit
+	.size	REW_storeCombatEntry, .-REW_storeCombatEntry
 	.align	1
 	.global	REW_recordActionCombat
 	.syntax unified
@@ -261,56 +319,85 @@ REW_recordActionCombat:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r3, r4, r5, r6, r7, lr}
-	bl	REW_createBufferEntry
-	ldr	r3, .L40
-	ldr	r4, .L40+4
-	movs	r5, r0
-	ldrb	r0, [r3, #11]
-	bl	.L42
-	ldr	r7, .L40+8
-	movs	r6, r0
+	ldr	r7, .L44
+	ldr	r4, .L44+4
 	ldrb	r0, [r7, #11]
-	bl	.L42
-	movs	r3, #2
-	movs	r2, #19
-	str	r3, [r5, #8]
-	movs	r3, #0
-	ldrsb	r2, [r6, r2]
+	bl	.L46
+	ldr	r5, .L44+8
+	movs	r6, r0
+	ldrb	r0, [r5, #11]
+	bl	.L46
 	movs	r4, r0
-	cmp	r2, r3
-	beq	.L30
-	movs	r2, r5
-	movs	r0, r6
-	ldr	r1, .L40
-	bl	REW_recordCombatUnit
-	movs	r3, r0
-.L30:
-	cmp	r4, #0
-	beq	.L29
-	movs	r2, #19
-	ldrsb	r2, [r4, r2]
-	cmp	r2, #0
-	beq	.L29
-	movs	r2, r5
+	bl	REW_createBufferEntry
+	movs	r3, #2
+	strh	r3, [r0, #8]
+	ldrb	r3, [r6, #16]
+	strb	r3, [r0, #10]
+	ldrb	r3, [r6, #17]
+	strb	r3, [r0, #11]
+	movs	r3, #19
+	ldrsb	r3, [r6, r3]
+	movs	r2, r0
+	cmp	r3, #0
+	beq	.L36
 	movs	r1, r7
+	movs	r0, r6
+	bl	REW_storeCombatEntry
+.L36:
+	bl	REW_createBufferEntry
+	movs	r3, #2
+	strh	r3, [r0, #8]
+	ldrb	r3, [r4, #16]
+	strb	r3, [r0, #10]
+	ldrb	r3, [r4, #17]
+	strb	r3, [r0, #11]
+	movs	r3, #19
+	ldrsb	r3, [r4, r3]
+	movs	r2, r0
+	cmp	r3, #0
+	beq	.L35
+	movs	r1, r5
 	movs	r0, r4
-	bl	REW_recordCombatUnit
-.L29:
+	bl	REW_storeCombatEntry
+.L35:
 	@ sp needed
 	pop	{r3, r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L41:
+.L45:
 	.align	2
-.L40:
+.L44:
 	.word	gBattleActor
 	.word	GetUnit
 	.word	gBattleTarget
 	.size	REW_recordActionCombat, .-REW_recordActionCombat
+	.global	REW_procScr
+	.section	.rodata.str1.1,"aMS",%progbits,1
+.LC18:
+	.ascii	"REW_proc\000"
+	.section	.rodata
+	.align	2
+	.set	.LANCHOR0,. + 0
+	.type	REW_procScr, %object
+	.size	REW_procScr, 32
+REW_procScr:
+	.short	1
+	.short	0
+	.word	.LC18
+	.short	14
+	.short	120
+	.word	0
+	.short	2
+	.short	0
+	.word	REW_procEnd
+	.short	0
+	.short	0
+	.word	0
 	.ident	"GCC: (devkitARM release 55) 10.2.0"
+	.text
 	.code 16
 	.align	1
-.L28:
+.L4:
 	bx	r3
-.L42:
+.L46:
 	bx	r4

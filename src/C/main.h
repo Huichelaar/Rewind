@@ -6,9 +6,14 @@
 struct REW_RewindEntry {
   /* 00 */ struct REW_RewindEntry* prev;    // Doubly-linked list.
   /* 04 */ struct REW_RewindEntry* next;    // ^.
-  /* 08 */ u8 unitActionType;               // As used by action struct + 0x11, 0x203A958 + 0x11.
-  /* 09 */ u8 extraParam[3];                // Further parameters used to identify structure of data.
-  /* 0C */ u8 data[];                       // Structure & size depends on unitActionType & actionParam.
+  /* 08 */ u8 diffType;                     // Can be action or flag.
+  /* 09 */ u8 extraParam;                   // Further parameters used to identify structure of data.
+  union {
+  /* 0A */ s8 x;
+  /* 0A */ u8 flag;
+  };
+  /* 0B */ s8 y;
+  /* 0C */ u8 data[];                       // Structure & size depends on unitActionType & extraParam.
 };
 
 // Rewind buffer.
@@ -28,7 +33,7 @@ extern struct REW_RewindBuffer* REW_rewindBufferLarge;
 extern struct REW_RewindBuffer* REW_rewindBufferSmall;
 
 struct REW_RewindEntry* REW_createBufferEntry();
-u16 REW_recordCombatUnit(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry, u16 offs);
+u16 REW_storeCombatEntry(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry);
 void REW_recordActionCombat();
 
 extern int GetBattleUnitUpdatedWeaponExp(struct BattleUnit* bu);  // 0x802C0B4

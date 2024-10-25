@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "main.h"
+#include "menu/menu.c"
 
 // Create a new RewindEntry, append it to the end of small buffer.
 // NOTE: this routine doesn't update the rewind buffer's size
@@ -21,13 +22,19 @@ struct REW_RewindEntry* REW_createBufferEntry() {
 }
 
 // Store unit's changes resulting from combat.
-u16 REW_recordCombatUnit(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry, u16 offs) {
+// REW_RewindEntry.data[] takes this form:
+//  - First two bytes form an unsigned short indicating size of data (including this short) in bytes.
+//  - Remaining bytes form pairs of:
+//    - byte offset. Apply diff to Unit + this offset.
+//    - byte diff. Subtract diff from offset when undoing, add when redoing.
+u16 REW_storeCombatEntry(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry) {
   struct Unit buCopy;
   u8* unitPre = (u8*)unit;
   u8* unitPost = (u8*)&buCopy;
   u8 unitsize = 0x48;
   u8 diff = 0;
-  int i, j = offs;
+  int i;
+  int offs = 2;
   
   // Apply corrections first. Based on UpdateUnitFromBattle, 0x802C1EC.
   CpuCopy16(bu, &buCopy, unitsize);
@@ -68,9 +75,9 @@ u16 REW_recordCombatUnit(struct Unit* unit, struct BattleUnit* bu, struct REW_Re
   for (i = 0; i < unitsize; i++) {
     diff = unitPost[i] - unitPre[i];
     if (diff) {
-      rewindEntry->data[j] = i;
-      rewindEntry->data[j+1] = diff;
-      j += 2;
+      rewindEntry->data[offs] = i;
+      rewindEntry->data[offs+1] = diff;
+      offs += 2;
     }
   }
   
@@ -78,28 +85,31 @@ u16 REW_recordCombatUnit(struct Unit* unit, struct BattleUnit* bu, struct REW_Re
   if (gBattleStats.config & BATTLE_CONFIG_BALLISTA) {
     diff = GetItemUses(bu->weapon) - GetTrap(buCopy.ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES];
     if (diff) {
-      rewindEntry->data[j] = i;
-      rewindEntry->data[j+1] = diff;
-      j += 2;
+      rewindEntry->data[offs] = i;
+      rewindEntry->data[offs+1] = diff;
+      offs += 2;
     }
   }
   
   // BWL changes. TODO
   
-  return j;
+  *(u16*)rewindEntry->data = offs;
+  
+  return offs;
 }
 
 // Store changes resulting from a combat action.
 void REW_recordActionCombat() {
-  u16 offs = 0;
-  struct REW_RewindEntry* rewindEntry = REW_createBufferEntry();
+  struct REW_RewindEntry* rewindEntry;
   struct Unit* actor  = GetUnit(gBattleActor.unit.index);
   struct Unit* target = GetUnit(gBattleTarget.unit.index);
   
-  rewindEntry->unitActionType = UNIT_ACTION_COMBAT;
-  rewindEntry->extraParam[0] = 0;   // TODO Incorporate deaths
-  rewindEntry->extraParam[1] = 0;   // and/or other flags.
-  rewindEntry->extraParam[2] = 0;   // ^.
+  // Actor.
+  rewindEntry = REW_createBufferEntry();
+  rewindEntry->diffType = UNIT_ACTION_COMBAT;
+  rewindEntry->extraParam = 0;      // TODO Incorporate deaths
+  rewindEntry->x = actor->xPos;     // and/or other flags.
+  rewindEntry->y = actor->yPos;
   
   if (actor->curHP == 0) {
     // TODO handle death.
@@ -108,8 +118,15 @@ void REW_recordActionCombat() {
       //  - Rescue drop
     ;
   } else {
-    offs = REW_recordCombatUnit(actor, &gBattleActor, rewindEntry, offs);
+    REW_storeCombatEntry(actor, &gBattleActor, rewindEntry);
   }
+  
+  // Target.
+  rewindEntry = REW_createBufferEntry();
+  rewindEntry->diffType = UNIT_ACTION_COMBAT;
+  rewindEntry->extraParam = 0;      // TODO Incorporate deaths
+  rewindEntry->x = target->xPos;    // and/or other flags.
+  rewindEntry->y = target->yPos;
   
   if (target) {
     if (target->curHP == 0) {
@@ -119,7 +136,7 @@ void REW_recordActionCombat() {
       //  - Rescue drop
       ;
     } else {
-      offs = REW_recordCombatUnit(target, &gBattleTarget, rewindEntry, offs);
+      REW_storeCombatEntry(target, &gBattleTarget, rewindEntry);
     }
   } else  {
     // TODO obstacle
