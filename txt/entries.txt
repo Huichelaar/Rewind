@@ -1,0 +1,7 @@
+#0xd4c REW_combat
+//first text ID in the free block
+ attacked [X]
+
+## REW_phase
+//first text ID in the free block
+Phase [X]

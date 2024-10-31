@@ -6,6 +6,8 @@
 // NOTE: this routine doesn't update the rewind buffer's size
 // variable, this needs to updated separately.
 struct REW_RewindEntry* REW_createBufferEntry() {
+  
+  // 8 is size of .size and .end ptr attributes of RewindBuffer.
   u32 addr = (u32)REW_rewindBufferSmall + REW_rewindBufferSmall->size + 8;
   struct REW_RewindEntry* rewindEntry = (struct REW_RewindEntry*)addr;
   
@@ -17,6 +19,7 @@ struct REW_RewindEntry* REW_createBufferEntry() {
   }
   rewindEntry->next = NULL;
   REW_rewindBufferSmall->end = rewindEntry;
+  REW_rewindBufferSmall->size += 12;    // 12 is size of entry minus the data.
   
   return rewindEntry;
 }
@@ -27,14 +30,14 @@ struct REW_RewindEntry* REW_createBufferEntry() {
 //  - Remaining bytes form pairs of:
 //    - byte offset. Apply diff to Unit + this offset.
 //    - byte diff. Subtract diff from offset when undoing, add when redoing.
-u16 REW_storeCombatEntry(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry) {
+void REW_storeCombatEntry(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry) {
   struct Unit buCopy;
   u8* unitPre = (u8*)unit;
   u8* unitPost = (u8*)&buCopy;
   u8 unitsize = 0x48;
   u8 diff = 0;
   int i;
-  int offs = 2;
+  int offs = 2, align;
   
   // Apply corrections first. Based on UpdateUnitFromBattle, 0x802C1EC.
   CpuCopy16(bu, &buCopy, unitsize);
@@ -93,9 +96,17 @@ u16 REW_storeCombatEntry(struct Unit* unit, struct BattleUnit* bu, struct REW_Re
   
   // BWL changes. TODO
   
+  // Set entry's size.
   *(u16*)rewindEntry->data = offs;
   
-  return offs;
+  // Increase small buffer size accordingly.
+  REW_rewindBufferSmall->size += offs;
+  
+  // Make sure the rewind buffer's size is a multiple of 4.
+  // We do this so the next entry is word-aligned.
+  align = REW_rewindBufferSmall->size & 3;
+  if (align)
+    REW_rewindBufferSmall->size += 4 - align;
 }
 
 // Store changes resulting from a combat action.

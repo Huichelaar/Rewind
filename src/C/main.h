@@ -33,7 +33,7 @@ extern struct REW_RewindBuffer* REW_rewindBufferLarge;
 extern struct REW_RewindBuffer* REW_rewindBufferSmall;
 
 struct REW_RewindEntry* REW_createBufferEntry();
-u16 REW_storeCombatEntry(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry);
+void REW_storeCombatEntry(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindEntry* rewindEntry);
 void REW_recordActionCombat();
 
 extern int GetBattleUnitUpdatedWeaponExp(struct BattleUnit* bu);  // 0x802C0B4

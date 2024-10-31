@@ -37,8 +37,10 @@ POP
 // Save space size for rewind.
 #define REW_rewindBufferSize 0x1DC0
 
+#include "txt/txt.event"
 #include "src/ExpandedModularSave/ExModularSave.event"
 #include "src/EA.event"
 #include "src/asm/asm.event"
 #include "src/C/main.lyn.event"
 #include "src/menu/menu.event"
+#include "gfx/gfx.event"

@@ -17,7 +17,7 @@
 # Directories
 **/*.TextEntries
 **/*.MkDeps
-Event Assembler
+EventAssembler
 Workplace
 
 # Other
