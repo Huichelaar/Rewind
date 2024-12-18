@@ -4,7 +4,9 @@
 #ifndef TEXT_DEFINITIONS_ENTRIES_TXT
 #define TEXT_DEFINITIONS_ENTRIES_TXT
 
-#define REW_combat $D4C
-#define REW_phase $D4D
+#define REW_menuCommandName $D4C
+#define REW_menuCommandDesc $D4D
+#define REW_combat $D4E
+#define REW_phase $D4F
 
 #endif // TEXT_DEFINITIONS_ENTRIES_TXT

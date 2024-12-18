@@ -10,12 +10,20 @@
 {
 
 __TEXTPROCESSD4C:
-#incbin ".TextEntries/entriesREW_combat.fetxt.dmp"
+#incbin ".TextEntries/entriesREW_menuCommandName.fetxt.dmp"
 setText($D4C, __TEXTPROCESSD4C)
 
 __TEXTPROCESSD4D:
-#incbin ".TextEntries/entriesREW_phase.fetxt.dmp"
+#incbin ".TextEntries/entriesREW_menuCommandDesc.fetxt.dmp"
 setText($D4D, __TEXTPROCESSD4D)
+
+__TEXTPROCESSD4E:
+#incbin ".TextEntries/entriesREW_combat.fetxt.dmp"
+setText($D4E, __TEXTPROCESSD4E)
+
+__TEXTPROCESSD4F:
+#incbin ".TextEntries/entriesREW_phase.fetxt.dmp"
+setText($D4F, __TEXTPROCESSD4F)
 
 }
 

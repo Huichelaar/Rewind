@@ -43,9 +43,28 @@ POP
 // TODO, temporary fixed rewind buffer instance.
 // remove when you can.
 ALIGN 4; REW_tempRewindBuf:
-WORD 0x1C 0 0 0
-BYTE 0x02 0x00 08 05
-SHORT 0x0008            // Size of data in bytes. Data is this + everything that follows from here.
-BYTE 0x09 0x0A          // exp_Diff           = +10
-BYTE 0x13 0xF7          // curHP_Diff         = -9
-BYTE 0x28 0x04          // ranks[0] (sword)   = +4
+WORD 0x1C                     // Size of area of buffer that's in use.
+POIN REW_tempSeq1             // Ptr to End-sequence.
+
+REW_tempSeq1:
+SHORT 0                       // Size of preceding sequence. There is none, so size = 0.
+SHORT 0x18                    // Size of this sequence.
+
+REW_tempSeq1Entry1:
+BYTE 2                        // diffType = combat Action.
+BYTE 0                        // extraParam
+BYTE 08 05                    // x and y.
+SHORT 0x0006                  // Size of data in bytes. Data is everything that follows from here.
+BYTE 0x09 0x0A                // exp_Diff           = +10
+BYTE 0x13 0xF7                // curHP_Diff         = -9
+BYTE 0x28 0x04                // ranks[0] (sword)   = +4
+// End of data.
+
+// Entry 2
+REW_tempSeq1Entry2:
+BYTE 2                        // diffType = combat Action.
+BYTE 0                        // extraParam
+BYTE 08 06                    // x and y.
+SHORT 0x0002                  // Size of data in bytes. Data is everything that follows from here.
+BYTE 0x13 0xF2                // curHP_Diff         = -14
+// End of data.

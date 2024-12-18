@@ -27,8 +27,8 @@ BYTE 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
 
 // Rewind.
 WORD  0x0                     // Unused.
-SHORT 0x691                   // for "Ride" textId. Placeholder.
-SHORT 0x6E3                   // Records help textID. Placeholder.
+SHORT REW_menuCommandName     // "Ride" textId.
+SHORT REW_menuCommandDesc     // Ride help textID.
 BYTE  0x0                     // White colour.
 BYTE  0x75                    // menuCommandID. This ID seems to be yet unused.
 SHORT 0x0                     // Pad.

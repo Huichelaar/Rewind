@@ -83,8 +83,6 @@ gSaveBlockTypeSizeLookup:
 
 #include "SrcModules/SaveUnitExpanded.lyn.event" // Regular.
 
-#include "CustomModules/rewind.lyn.event" // Rewind.
-
 //DebuffTablePointer: // required for debuffs module
 	//WORD DebuffTableRam
 
@@ -190,10 +188,12 @@ gSuspendSaveChunks:
 	DeclSaveChunk($2406, $00C8, MSa_WriteSupplyItems, MSa_ReadSupplyItems)
 	
   // Rewind data.
-  DeclSaveChunk($24CE, REW_rewindBufferSize, REW_SaveRewindBuf, 0)
+  DeclSaveChunk($24CE, $0002, REW_saveActiveUnitMoveOrigin, REW_loadActiveUnitMoveOrigin)
+  DeclSaveChunk($24D0, REW_curSequenceSize, REW_saveCurSequence, REW_loadCurSequence)
+  DeclSaveChunk($24D0 + REW_curSequenceSize, REW_rewindSize, REW_saveRewind, 0)
   
-	// ends at $428E
-	// free up to $4290 ($2 free bytes)
+	// ends at $4290
+	// free up to $4290 ($0 free bytes)
 
 	DeclSaveChunk(0, 0, 0, MSu_LoadClaimFlagsFromParentSave) // Load Bonus Claim flags from parent save
 

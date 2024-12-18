@@ -20,27 +20,34 @@
 //  - 0x200 F1C8      left framedata buffer,  during banims room for 0x2A00 bytes, otherwise 0x1FB4(?).
 //  - 0x201 1BC8      right framedata buffer, during banims room for 0x2A00 bytes, otherwise 0x604(?).
 //
-// Limits are assumed on decomp symbols.
-ALIGN 4; REW_rewindBufferLarge:
+// Limits are assumed using decomp symbols.
+ALIGN 4; REW_rewindBuffer:      // Houses all previous sequences when rewinding.
 WORD 0x200F1C8
-ALIGN 4; REW_rewindBufferSmall:
+ALIGN 4; REW_curSequence:       // Stores current sequence when action + consequences are executed.
 WORD 0x3003750
 
 PUSH
 
-  // This clears the REW_rewindBufferSmall.
+  // This clears the REW_curSequence.
   ORG 0x228
-  WORD 0 0
+  WORD 0
   
 POP
 
 // Save space size for rewind.
-#define REW_rewindBufferSize 0x1DC0
+#define REW_rewindSize 0x1D40
+
+// Game can save before action has completed.
+// This is used to save partial actions.
+#define REW_curSequenceSize 0x80
 
 #include "txt/txt.event"
-#include "src/ExpandedModularSave/ExModularSave.event"
 #include "src/EA.event"
 #include "src/asm/asm.event"
 #include "src/C/main.lyn.event"
 #include "src/menu/menu.event"
+#include "src/ExpandedModularSave/ExModularSave.event"
 #include "gfx/gfx.event"
+
+// TODO, comment out when done debugging.
+#include "debug/debug.event"

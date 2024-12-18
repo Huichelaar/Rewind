@@ -1,7 +1,12 @@
-#0xd4c REW_combat
+#0xd4c REW_menuCommandName
 //first text ID in the free block
+ Rewind[X]
+
+## REW_menuCommandDesc
+TODO description of rewind.[X]
+
+## REW_combat
  attacked [X]
 
 ## REW_phase
-//first text ID in the free block
 Phase [X]

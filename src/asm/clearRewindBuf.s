@@ -8,7 +8,7 @@ sub   sp, #0x4
 
 @ Search for rewindbuffer savechunk.
 ldr   r0, =gSuspendSaveChunks-0x10
-ldr   r1, =REW_SaveRewindBuf
+ldr   r1, =REW_saveRewind
 ldr   r2, =0xFFFF
 
 loop:
@@ -40,10 +40,10 @@ loop:
       @ mov   r0, #0x0
       @ str   r0, [sp]
       @ mov   r0, sp                        @ Source.
-      @ ldr   r1, =REW_rewindBufferLarge
+      @ ldr   r1, =REW_rewindBuffer
       @ lsl   r1, #0x5
       @ lsr   r1, #0x5                      @ Target.
-      @ ldr   r2, =REW_rewindBufferSize
+      @ ldr   r2, =REW_rewindSize
       @ lsl   r2, #0x5
       @ lsr   r2, #0x7
       @ ldr   r3, =0x01000000               @ Fill with [r0].
@@ -51,11 +51,11 @@ loop:
       @ swi   #0xC                          @ CpuFastSet.
       
       @ Move temp-buffer contents to rewind buffer.
-      @ ldr   r0, =REW_rewindBufferLarge
+      @ ldr   r0, =REW_rewindBuffer
       @ lsl   r0, #0x5
       @ lsr   r0, #0x5                      @ Source.
       @ mov   r1, r4                        @ Target.
-      @ ldr   r2, =REW_rewindBufferSize
+      @ ldr   r2, =REW_rewindSize
       @ lsl   r2, #0x5
       @ lsr   r2, #0x5                      @ Size.
       @ ldr   r3, =WriteAndVerifySramFast
