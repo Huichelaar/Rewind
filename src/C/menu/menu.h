@@ -1,6 +1,7 @@
 #ifndef MENU_H
 #define MENU_H
 #include "gbafe.h"
+#include "../save/save.h"
 
 // Macros.
 #define TEXTID(textEntry) (u16)(u32)&textEntry        // For use with non-vanilla text.
@@ -17,6 +18,7 @@ struct APProc {
 const extern void UnpackUiVArrowGfx(int chr, int pal);  // 0x80B53BC 
 
 // Functions & structs.
+u8 REW_rewindMenuUsability(MenuCommandDefinition* command, u8 commandId);
 u8 REW_rewindMenuEffect(struct MenuProc* menu, struct MenuCommandProc* menuItem);
 
 struct REW_ProcState {
@@ -43,6 +45,7 @@ void REW_cancelRewind(struct REW_ProcState* proc);
 void REW_procEnd(struct REW_ProcState* proc);
 
 // Data.
+const extern u16*  REW_rewindSize;                    // Size of rewindBuffer.
 const extern void* REW_menuTSA;                       // UI TSA.
 const extern void* REW_phaseAPDef;                    // Phase icon AP Definition.
 const extern void* REW_upArrowAPDef;                  // Up arrow AP Definition.

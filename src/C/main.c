@@ -3,6 +3,7 @@
 #include "menu/menu.c"
 #include "save/save.c"
 
+
 /*
 // Create a new RewindEntry, append it to the end of small buffer.
 // NOTE: this routine doesn't update the rewind buffer's size
@@ -43,7 +44,7 @@ struct REW_RewindEntry* REW_createSeqEntry(struct REW_RewindSequence* sequence) 
 
 // Given a rewind-entry, return the next entry of the sequence.
 struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* rewindEntry) {
-  u16 size = *(u16*)&rewindEntry->data;
+  u16 size = (*(u16*)&rewindEntry->data + 1) * 2;
   int align = size & 3;
   
   // Pad out size until it's word aligned;
@@ -52,7 +53,7 @@ struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* rewindEntry) {
     size += 4 - align;
    
   // Add 8 to account for attributes other than variably-sized data.
-  return (struct REW_RewindEntry*)((u32)rewindEntry + size + 8);
+  return (struct REW_RewindEntry*)((u32)rewindEntry + 8 + size);
 }
 
 // Store unit's changes resulting from combat.

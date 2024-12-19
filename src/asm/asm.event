@@ -10,9 +10,6 @@ PUSH
 
 POP
 
-ALIGN 4; REW_clearRewindBuf:
-#include "clearRewindBuf.lyn.event"
-
 ALIGN 4; REW_chapterBeginCalcLoop:
 #include "chapterBeginCalcLoop.lyn.event"
 

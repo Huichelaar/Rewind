@@ -1,6 +1,18 @@
 #include <stdio.h>
 #include "menu.h"
 
+// Command is usable if there's at least one sequence in rewind buffer.
+u8 REW_rewindMenuUsability(MenuCommandDefinition* command, u8 commandId) {
+  u32 size;
+  
+  // Confirm whether there's data in the rewind-buffer or not.
+  ReadSramFast(REW_findRewindBuf(), &size, 4);   // Read size of rewindbuffer.
+
+  if (size == 0)
+    return MCA_NONUSABLE;
+  return MCA_USABLE;
+}
+
 u8 REW_rewindMenuEffect(struct MenuProc* menu, struct MenuCommandProc* menuItem) {
   LockGameLogic();
   
@@ -44,14 +56,17 @@ const struct ProcInstruction REW_procScr[] = {
 // Set-up last sequence as current.
 void REW_initProc(struct REW_ProcState* proc) {
   
+  // Load rewindBuffer into RAM.
+  REW_loadRewind(REW_findRewindBuf(), (u16)(u32)(&REW_rewindSize));
+  
   // We shouldn't be able to get here,
   // but end proc if rewind buffer is empty.
-  if (REW_tempRewindBuf.size <= 0) {
+  if (REW_rewindBuffer->size <= 0) {
     EndProc((Proc*)proc);
     return;
   }
   
-  proc->curSequence = REW_tempRewindBuf.end;
+  proc->curSequence = REW_rewindBuffer->end;
 }
 
 // Draws actor (left unit) name & starts MU.

@@ -1,6 +1,23 @@
 #include <stdio.h>
 #include "save.h"
 
+// Find address of rewindBuffer in save data.
+void* REW_findRewindBuf() {
+  
+  //void* const source = GetSaveSourceAddress(SAVE_BLOCK_SUSPEND);  // Doesn't work when no active suspend.
+  void* const source = (void*)(0xE000000 + gSaveBlockDecl[SAVE_BLOCK_SUSPEND * 2]);
+  const struct SaveChunkDecl* chunk = MS_FindSuspendSaveChunk((u16)(u32)(&EMS_CHUNK_REWIND));
+  
+  return (void*)(source + chunk->offset);
+}
+
+// Clear the rewind buffer, by setting size val to 0.
+// Executes at the start of a chapter.
+void REW_clearRewindBuf() {
+  u32 val = 0;
+  WriteAndVerifySramFast(&val, REW_findRewindBuf(), 4);
+}
+
 // Load active unit's position before acting.
 // We need this so we can track where unit
 // was before undertaking action.

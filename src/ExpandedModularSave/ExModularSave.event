@@ -70,6 +70,7 @@ gSaveBlockTypeSizeLookup:
 #define EMS_CHUNK_EIDS_PERMANENT 6
 #define EMS_CHUNK_BONUSCLAIMDATA 7
 #define EMS_CHUNK_WMDATA         8
+#define EMS_CHUNK_REWIND         9
 
 // ===========
 // = MODULES =
@@ -190,7 +191,7 @@ gSuspendSaveChunks:
   // Rewind data.
   DeclSaveChunk($24CE, $0002, REW_saveActiveUnitMoveOrigin, REW_loadActiveUnitMoveOrigin)
   DeclSaveChunk($24D0, REW_curSequenceSize, REW_saveCurSequence, REW_loadCurSequence)
-  DeclSaveChunk($24D0 + REW_curSequenceSize, REW_rewindSize, REW_saveRewind, 0)
+  DeclSaveChunk($24D0 + REW_curSequenceSize, REW_rewindSize, REW_saveRewind, 0, EMS_CHUNK_REWIND)
   
 	// ends at $4290
 	// free up to $4290 ($0 free bytes)

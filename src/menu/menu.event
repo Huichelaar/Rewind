@@ -26,16 +26,16 @@ BYTE 0x61 0x26 0x02 0x08 0x79 0x26 0x02 0x08 0xE5 0x26 0x02 0x08
 BYTE 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
 
 // Rewind.
-WORD  0x0                     // Unused.
-SHORT REW_menuCommandName     // "Ride" textId.
-SHORT REW_menuCommandDesc     // Ride help textID.
-BYTE  0x0                     // White colour.
-BYTE  0x75                    // menuCommandID. This ID seems to be yet unused.
-SHORT 0x0                     // Pad.
-POIN  0x4F449                 // Usability routine. Set to always for now.
-WORD  0                       // Default draw routine.
-POIN  REW_rewindMenuEffect|1  // Effect routine. Some function that simply returns 0.
-WORD  0 0 0                   // Other routines that we'll let default routine handle.
+WORD  0x0                         // Unused.
+SHORT REW_menuCommandName         // "Ride" textId.
+SHORT REW_menuCommandDesc         // Ride help textID.
+BYTE  0x0                         // White colour.
+BYTE  0x75                        // menuCommandID. This ID seems to be yet unused.
+SHORT 0x0                         // Pad.
+POIN  REW_rewindMenuUsability|1   // Usability routine.
+WORD  0                           // Default draw routine.
+POIN  REW_rewindMenuEffect|1      // Effect routine.
+WORD  0 0 0                       // Other routines that we'll let default routine handle.
 
 // Records.
 BYTE 0xC4 0x7E 0x0D 0x08 0x9E 0x06 0xE3 0x06 0x00 0x70 0x00 0x00
