@@ -3,31 +3,6 @@
 #include "menu/menu.c"
 #include "save/save.c"
 
-
-/*
-// Create a new RewindEntry, append it to the end of small buffer.
-// NOTE: this routine doesn't update the rewind buffer's size
-// variable, this needs to updated separately.
-struct REW_RewindEntry* REW_createBufferEntry() {
-  
-  // 8 is size of .size and .end ptr attributes of RewindBuffer.
-  u32 addr = (u32)REW_rewindBufferSmall + REW_rewindBufferSmall->size + 8;
-  struct REW_RewindEntry* rewindEntry = (struct REW_RewindEntry*)addr;
-  
-  if (REW_rewindBufferSmall->end != NULL) {
-    REW_rewindBufferSmall->end->next = rewindEntry;
-    rewindEntry->prev = REW_rewindBufferSmall->end;
-  } else {
-    rewindEntry->prev = NULL;
-  }
-  rewindEntry->next = NULL;
-  REW_rewindBufferSmall->end = rewindEntry;
-  REW_rewindBufferSmall->size += 12;    // 12 is size of entry minus the data.
-  
-  return rewindEntry;
-}
-*/
-
 // Clears given rewind sequence by setting size value to 0.
 void REW_clearRewindSeq(struct REW_RewindSequence* sequence) {
   sequence->size = 0;
@@ -44,7 +19,7 @@ struct REW_RewindEntry* REW_createSeqEntry(struct REW_RewindSequence* sequence) 
 
 // Given a rewind-entry, return the next entry of the sequence.
 struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* rewindEntry) {
-  u16 size = (*(u16*)&rewindEntry->data + 1) * 2;
+  u16 size = (*(u16*)&rewindEntry->data + 2);
   int align = size & 3;
   
   // Pad out size until it's word aligned;
@@ -54,6 +29,86 @@ struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* rewindEntry) {
    
   // Add 8 to account for attributes other than variably-sized data.
   return (struct REW_RewindEntry*)((u32)rewindEntry + 8 + size);
+}
+
+// Given a rewind-sequence, return the next sequence of the buffer.
+struct REW_RewindSequence* REW_nextSequence(struct REW_RewindSequence* sequence) {
+  return (struct REW_RewindSequence*)((u32)(sequence) + 
+         (u32)sequence->size +
+         4);
+}
+
+// Given a rewind-sequence, return the previous sequence of the buffer.
+struct REW_RewindSequence* REW_prevSequence(struct REW_RewindSequence* sequence) {
+  return (struct REW_RewindSequence*)((u32)(sequence) - 
+         (u32)sequence->sizePrev -
+         4);
+}
+
+// Make sure the rewind sequence's size is a multiple of 4.
+// We do this to ensure the next entry is word-aligned.
+void REW_alignSequence(struct REW_RewindSequence* sequence) {
+  int align = sequence->size & 3;
+  if (align)
+    sequence->size += 4 - align;
+}
+
+// Given phase, determine next phase.
+// Also increment turn if phase change would do so.
+// Also indicate if next phase is skipped.
+u8 REW_nextPhase(u8 phase, u8* turn, u8* skip) {
+  u8 nextPhase = FACTION_BLUE;
+  
+  switch(phase) {
+    case FACTION_BLUE:
+      nextPhase = FACTION_RED;
+      break;
+    case FACTION_RED:
+      nextPhase = FACTION_GREEN;
+      break;
+    case FACTION_GREEN:
+    default:
+      *turn += 1;
+  }
+  
+  if (GetPhaseAbleUnitCount(nextPhase) == 0)
+    *skip = true;
+  
+  return nextPhase;
+}
+
+// Set up phase change sequence in rewind buffer.
+void REW_seqPhaseChange() {
+  int i, unitID;
+  u8 nextPhase, turnIncr = 0, skip = false;
+  struct REW_RewindEntry* rewindEntry;
+  struct REW_RewindPhaseChangeData* phaseChangeData;
+  
+  // Create new entry.
+  nextPhase = REW_nextPhase(gChapterData.currentPhase, &turnIncr, &skip);
+  rewindEntry = REW_createSeqEntry(REW_curSequence);
+  rewindEntry->diffType = REW_SEQUENCE_PHASECHANGE;
+  
+  phaseChangeData = (struct REW_RewindPhaseChangeData*)rewindEntry->data;
+  phaseChangeData->flags = 0;
+  if (turnIncr) { phaseChangeData->flags |= REW_PHASECHANGE_TURNINCR; }
+  if (skip) { phaseChangeData->flags |= REW_PHASECHANGE_SKIPPHASE; }
+  phaseChangeData->phasePre = gChapterData.currentPhase;
+  phaseChangeData->phasePost = nextPhase;
+  
+  // Track greyed out units prior to phase change.
+  i = 0;
+  for (unitID = gChapterData.currentPhase + 1; unitID < gChapterData.currentPhase + 0x40; unitID++) {
+    struct Unit* unit = GetUnit(unitID);
+    
+    if (UNIT_IS_VALID(unit) && (unit->state & (US_UNSELECTABLE))) {
+      phaseChangeData->unitIDs[i] = unitID;
+      i++;
+    }
+  }
+  phaseChangeData->size = i + 3;
+  REW_curSequence->size += 13 + i;
+  REW_alignSequence(REW_curSequence);
 }
 
 // Store unit's changes resulting from combat.
@@ -69,7 +124,7 @@ void REW_storeCombatData(struct Unit* unit, struct BattleUnit* bu, struct REW_Re
   u8 unitsize = 0x48;
   u8 diff = 0;
   int i;
-  int changeIdx = 0, align;
+  int changeIdx = 0;
   
   // Apply corrections first. Based on UpdateUnitFromBattle, 0x802C1EC.
   CpuCopy16(bu, &buCopy, unitsize);
@@ -130,18 +185,15 @@ void REW_storeCombatData(struct Unit* unit, struct BattleUnit* bu, struct REW_Re
   // BWL changes. TODO
   
   // Set entry's size.
-  combatData->size = changeIdx;       // We don't include size of size attr, merely data attr.
+  // Each change consists of two params, offs & diff, 
+  // thus we multiply changeIdx by 2.
+  combatData->size = changeIdx * 2;       // We don't include size of size attr, merely data attr.
   
   // Increase rewind sequence's size accordingly.
   // Each change consists of two params, offs & diff, 
   // thus we multiply changeIdx by 2.
   rewindSeq->size += 2 + changeIdx * 2;
-  
-  // Make sure the rewind entry's size is a multiple of 4.
-  // We do this to ensure the next entry is word-aligned.
-  align = rewindSeq->size & 3;
-  if (align)
-    rewindSeq->size += 4 - align;
+  REW_alignSequence(rewindSeq);
 }
 
 // Store changes resulting from a combat action.
@@ -170,6 +222,7 @@ void REW_recordActionCombat() {
     //  - TryRemoveUnitFromBallista
     //  - Item drop
     //  - Rescue drop
+    //  - Dead enemies get cleared from Unit* array.
     ;
   } else {
     REW_storeCombatData(actor, &gBattleActor, rewindSeq, rewindEntry);
@@ -192,6 +245,7 @@ void REW_recordActionCombat() {
       //  - TryRemoveUnitFromBallista
       //  - Item drop
       //  - Rescue drop
+      //  - Dead enemies get cleared from Unit* array.
       ;
     } else {
       REW_storeCombatData(target, &gBattleTarget, rewindSeq, rewindEntry);

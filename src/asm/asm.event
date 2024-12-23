@@ -7,6 +7,13 @@ PUSH
   // TODO this could be moved to a generic ChapterBeginCalcloop.
   ORG 0x59A23C
   POIN REW_chapterBeginCalcLoop | 1
+  
+  // Run an additional routine when changing phases.
+  // This routine sets up phase change sequence in rewind buffer.
+  ORG 0x15410
+  jumpToHack(REW_phaseChangeHook)
+  // TODO, ClearActiveFactionGrayedStates actually does something with BWL data?
+  // Need to handle that as well. Can take advantage of this same hook.
 
 POP
 
@@ -15,5 +22,9 @@ ALIGN 4; REW_chapterBeginCalcLoop:
 
 ALIGN 4; REW_chapterBeginCalcLoopEntries:    // 0-terminated
 POIN 0x85971    // SetEventId_0x84. Calcloop replaced this call.
+POIN REW_clearCurSequence | 1
 POIN REW_clearRewindBuf | 1
 WORD 0
+
+ALIGN 4; REW_phaseChangeHook:
+#include "phaseChangeHook.lyn.event"

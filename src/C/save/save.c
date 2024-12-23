@@ -1,12 +1,31 @@
 #include <stdio.h>
 #include "save.h"
 
+// Find address of current sequence in save data.
+void* REW_findCurSequence() {
+
+  //void* const source = GetSaveSourceAddress(SAVE_BLOCK_SUSPEND);  // Doesn't work when no active suspend.
+  void* const source = (void*)(0xE000000 + gSaveBlockDecl[SAVE_BLOCK_SUSPEND * 2]);
+  const struct SaveChunkDecl* chunk = MS_FindSuspendSaveChunk((u16)(u32)(&EMS_CHUNK_REWIND_SEQ));
+  
+  return (void*)(source + chunk->offset);
+}
+
+// Clear current sequence buffer,
+// by setting size values to 0.
+// Executes at the start of a chapter.
+void REW_clearCurSequence() {
+  REW_curSequence->sizePrev = 0;
+  REW_curSequence->size = 0;
+  WriteAndVerifySramFast(&REW_curSequence, REW_findCurSequence(), 4);
+}
+
 // Find address of rewindBuffer in save data.
 void* REW_findRewindBuf() {
   
   //void* const source = GetSaveSourceAddress(SAVE_BLOCK_SUSPEND);  // Doesn't work when no active suspend.
   void* const source = (void*)(0xE000000 + gSaveBlockDecl[SAVE_BLOCK_SUSPEND * 2]);
-  const struct SaveChunkDecl* chunk = MS_FindSuspendSaveChunk((u16)(u32)(&EMS_CHUNK_REWIND));
+  const struct SaveChunkDecl* chunk = MS_FindSuspendSaveChunk((u16)(u32)(&EMS_CHUNK_REWIND_BUF));
   
   return (void*)(source + chunk->offset);
 }
@@ -73,13 +92,18 @@ void REW_saveRewind(void* dest, u32 size) {
   u32 prevSeqSize = 0;
   struct REW_RewindSequence* newSeq;
   
-  // Don't update rewind data during action or phase change.
-  if (gActionData.suspendPointType == SUSPEND_POINT_DURINGACTION ||
-      gActionData.suspendPointType == SUSPEND_POINT_PHASECHANGE)
-    return;
-  
   // Skip if there's no new rewind sequence to append.
   if (REW_curSequence->size == 0)
+    return;
+  
+  // Don't update rewind data during action.
+  if (gActionData.suspendPointType == SUSPEND_POINT_DURINGACTION)
+    return;
+  
+  // Don't update rewind data during
+  // phasechange if phase will be skipped.
+  if (gActionData.suspendPointType == SUSPEND_POINT_PHASECHANGE &&
+     (GetPhaseAbleUnitCount(gChapterData.currentPhase) == 0))
     return;
   
   // Load existing rewind data into buffer.
@@ -103,4 +127,7 @@ void REW_saveRewind(void* dest, u32 size) {
   
   // Save the data.
   WriteAndVerifySramFast((void*)REW_rewindBuffer, dest, size);
+  
+  // Clear current rewind sequence to avoid writing it again.
+  REW_clearRewindSeq(REW_curSequence);
 }

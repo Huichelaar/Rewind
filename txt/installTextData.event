@@ -22,8 +22,20 @@ __TEXTPROCESSD4E:
 setText($D4E, __TEXTPROCESSD4E)
 
 __TEXTPROCESSD4F:
-#incbin ".TextEntries/entriesREW_phase.fetxt.dmp"
+#incbin ".TextEntries/entriesREW_phaseIndicator.fetxt.dmp"
 setText($D4F, __TEXTPROCESSD4F)
+
+__TEXTPROCESSD50:
+#incbin ".TextEntries/entriesREW_phaseBlue.fetxt.dmp"
+setText($D50, __TEXTPROCESSD50)
+
+__TEXTPROCESSD51:
+#incbin ".TextEntries/entriesREW_phaseRed.fetxt.dmp"
+setText($D51, __TEXTPROCESSD51)
+
+__TEXTPROCESSD52:
+#incbin ".TextEntries/entriesREW_phaseGreen.fetxt.dmp"
+setText($D52, __TEXTPROCESSD52)
 
 }
 

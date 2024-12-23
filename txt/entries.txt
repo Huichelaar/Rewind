@@ -8,5 +8,14 @@ TODO description of rewind.[X]
 ## REW_combat
  attacked [X]
 
-## REW_phase
+## REW_phaseIndicator
 Phase [X]
+
+## REW_phaseBlue
+Player phase starts.[X]
+
+## REW_phaseRed
+Enemy phase starts.[X]
+
+## REW_phaseGreen
+Other phase starts.[X]

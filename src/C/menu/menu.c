@@ -24,28 +24,99 @@ u8 REW_rewindMenuEffect(struct MenuProc* menu, struct MenuCommandProc* menuItem)
   return ME_DISABLE | ME_END | ME_PLAY_BEEP | ME_CLEAR_GFX;
 }
 
+int REW_isUndoAvailable(struct REW_RewindSequence* sequence) {
+  if (!sequence->sizePrev)
+    return false;
+  return true;
+}
+
+int REW_isRedoAvailable(struct REW_RewindSequence* sequence) {
+  if (REW_rewindBuffer->end <= sequence)
+    return false;
+  return true;
+}
+
+void REW_undo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence) {
+  struct REW_RewindEntry* entry = sequence->entry;
+  
+  switch(entry->diffType) {
+    case REW_SEQUENCE_PHASECHANGE:
+      // TODO phase switch events can happen during a skipped phase!
+      proc->flags |= REW_REFRESH_PHASE;
+      struct REW_RewindPhaseChangeData* phaseChangeData = (struct REW_RewindPhaseChangeData*)entry->data;
+      
+      // Set phase to phase prior to phase change.
+      gChapterData.currentPhase = phaseChangeData->phasePre;
+      
+      // Iterate over skipped phases.
+      while (true) {
+        
+        // Decrement turn if this phase change had incremented it.
+        if (phaseChangeData->flags & REW_PHASECHANGE_TURNINCR) {
+          gChapterData.turnNumber--;
+          proc->flags |= REW_REFRESH_TURN;
+        }
+        
+        if (phaseChangeData->flags & REW_PHASECHANGE_SKIPPHASE) {
+          entry = REW_nextEntry(entry);
+          phaseChangeData = (struct REW_RewindPhaseChangeData*)entry->data;
+        } else {
+          break;
+        }
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+void REW_redo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence) {
+  struct REW_RewindEntry* entry = sequence->entry;
+  
+  switch(entry->diffType) {
+    case REW_SEQUENCE_PHASECHANGE:
+      // TODO phase switch events can happen during a skipped phase!
+      proc->flags |= REW_REFRESH_PHASE;
+      struct REW_RewindPhaseChangeData* phaseChangeData = (struct REW_RewindPhaseChangeData*)entry->data;
+      
+      while (true) {
+        // Increment turn if this phase change had incremented it.
+        if (phaseChangeData->flags & REW_PHASECHANGE_TURNINCR) {
+          gChapterData.turnNumber++;
+          proc->flags |= REW_REFRESH_TURN;
+        }
+        
+        if (phaseChangeData->flags & REW_PHASECHANGE_SKIPPHASE) {
+          entry = REW_nextEntry(entry);
+          phaseChangeData = (struct REW_RewindPhaseChangeData*)entry->data;
+        } else {
+          break;
+        }
+      }
+      
+      // Set phase to phase prior to phase change.
+      gChapterData.currentPhase = phaseChangeData->phasePost;
+      break;
+    default:
+      break;
+  }
+}
+
 const struct ProcInstruction REW_procScr[] = {
   PROC_SET_NAME("REW_proc"),
   PROC_YIELD,
   PROC_CALL_ROUTINE(Text_InitFont),
   PROC_CALL_ROUTINE(REW_initProc),
+  PROC_CALL_ROUTINE(REW_initUI),
+  PROC_CALL_ROUTINE(REW_refreshUI),
   
   // Main loop
   PROC_LABEL(1),
-  PROC_CALL_ROUTINE(REW_drawUI),
   PROC_LOOP_ROUTINE(REW_handleInput),
-  
-  // Down-press: rewind action.
-  PROC_CALL_ROUTINE_ARG(REW_rewind, 1),
-  PROC_GOTO(1),
-  
-  // Up-press: undo rewind action.
-  PROC_CALL_ROUTINE_ARG(REW_rewind, -1),
-  PROC_GOTO(1),
   
   // B-press: Cancel rewind.
   PROC_LABEL(2),
-  PROC_CALL_ROUTINE(REW_cancelRewind),
+  //PROC_CALL_ROUTINE(REW_cancelRewind),
   
   // A-press: Confirm rewind.
   PROC_LABEL(3),
@@ -66,17 +137,23 @@ void REW_initProc(struct REW_ProcState* proc) {
     return;
   }
   
+  // Init current sequence.
   proc->curSequence = REW_rewindBuffer->end;
+  
+  // Init flags.
+  proc->flags = REW_REFRESH_TURN;
+  if (REW_isUndoAvailable(proc->curSequence)) { proc->flags |= REW_UNDO_AVAILABLE; }
+  if (REW_isRedoAvailable(proc->curSequence)) { proc->flags |= REW_REDO_AVAILABLE; }
 }
 
 // Draws actor (left unit) name & starts MU.
-void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry) {
+void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc) {
   Unit* unit = GetUnit(gMapUnit[rewindEntry->yCur][rewindEntry->xCur]);
   u16 name = unit->pCharacterData->nameTextId;
   u8 class = unit->pClassData->number;
-  Text_DrawString(&proc->sequenceDesc, GetStringFromIndex(name));     // Draw actor's name.
+  Text_DrawString(sequenceDesc, GetStringFromIndex(name));     // Draw actor's name.
   
-  proc->muActor = MU_CreateInternal(0, 0, class, -1, 0xC);
+  proc->muActor = MU_CreateInternal(0, 0, class, -1, GetUnitMapSpritePaletteIndex(unit));
   proc->muActor->objPriorityBits = 0x400;                 // Priority 1;
   proc->muActor->pAPHandle->tileBase &= 0xF3FF;           // Draw sprite
   proc->muActor->pAPHandle->tileBase |= 0x0400;           // over UI.    
@@ -86,15 +163,14 @@ void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewind
 }
 
 // Draws target (right unit) name & starts MU.
-void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry) {
+void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc) {
   Unit* unit = GetUnit(gMapUnit[rewindEntry->yCur][rewindEntry->xCur]);
   u16 name = unit->pCharacterData->nameTextId;
   u8 class = unit->pClassData->number;
-  Text_DrawString(&proc->sequenceDesc, GetStringFromIndex(name));     // Draw target's name.
+  Text_DrawString(sequenceDesc, GetStringFromIndex(name));     // Draw target's name.
+  int targetX = (Text_GetXCursor(sequenceDesc) + 43) << 4;
   
-  int targetX = (Text_GetXCursor(&proc->sequenceDesc) + 43) << 4;
-  
-  proc->muTarget = MU_CreateInternal(0, 0, class, -1, 0xD);
+  proc->muTarget = MU_CreateInternal(0, 0, class, -1, GetUnitMapSpritePaletteIndex(unit));
   proc->muTarget->objPriorityBits = 0x400;                // Priority 1;
   proc->muTarget->pAPHandle->tileBase &= 0xF3FF;          // Draw sprite
   proc->muTarget->pAPHandle->tileBase |= 0x0400;          // over UI.   
@@ -103,9 +179,9 @@ void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewin
   MU_SetFacing(proc->muTarget, MU_FACING_SELECTED);
 }
 
-// Draws UI and text of rewind sequence.
-// TODO, draw UI & text such that they don't cover active unit.
-void REW_drawUI(struct REW_ProcState* proc) {
+// Initialize UI, draw box, turn text, phase text.
+void REW_initUI(struct REW_ProcState* proc) {
+  TextHandle phaseText, turnText;
   
   // Put arrow gfx in OBJ VRAM.
   UnpackUiVArrowGfx(0x360, 3);
@@ -113,107 +189,196 @@ void REW_drawUI(struct REW_ProcState* proc) {
   // Draw info window.
   Decompress(&REW_menuTSA, gGenericBuffer);
   BgMap_ApplyTsa(gBg1MapBuffer, gGenericBuffer, 0);
-  //Text_ResetTileAllocation();   // This allows us to overwrite previous text.
+
+  // Init Turn number display text.
+  Text_InitClear(&proc->turnNumberText, 2);
+  Text_InitClear(&proc->turnNumberTextAlt, 2);
   
   // Draw "Turn".
-  Text_InitClear(&proc->turnText, 5);       // Defaults colour to white.
-  Text_SetXCursor(&proc->turnText, 2);
-  Text_DrawString(&proc->turnText, GetStringFromIndex(0x1C2));
-  Text_SetColorId(&proc->turnText, 2);
-  int turn = gChapterData.turnNumber;
-  if (turn < 10) {
-    // One-digit number.
-    Text_Advance(&proc->turnText, 8);
-    Text_DrawNumber(&proc->turnText, turn);
-  } else if (turn < 100) {
-    // Two-digit number.
-    Text_Advance(&proc->turnText, 2);
-    Text_DrawNumber(&proc->turnText, turn);
-  } // We're not drawing three+ digit numbers. Because.
-  Text_Display(&proc->turnText, TILEMAP_LOCATED(gBg0MapBuffer, 24, 1));
+  Text_InitClear(&turnText, 3);
+  Text_SetXCursor(&turnText, 1);
+  Text_DrawString(&turnText, GetStringFromIndex(0x1C2));
+  Text_Display(&turnText, TILEMAP_LOCATED(gBg0MapBuffer, 24, 1));
   
   // Draw "Phase".
-  Text_InitClear(&proc->phaseText, 4);      // Defaults colour to white.
-  Text_SetXCursor(&proc->phaseText, 2);
-  Text_DrawString(&proc->phaseText, GetStringFromIndex(TEXTID(REW_phase)));
-  Text_Display(&proc->phaseText, TILEMAP_LOCATED(gBg0MapBuffer, 24, 3));
+  Text_InitClear(&phaseText, 4);
+  Text_SetXCursor(&phaseText, 1);
+  Text_DrawString(&phaseText, GetStringFromIndex(TEXTID(REW_phaseIndicator)));
+  Text_Display(&phaseText, TILEMAP_LOCATED(gBg0MapBuffer, 24, 3));
   
-  // Phase symbol AP.
-  u16 pal = 0;                                  // Ally.
-  if (gChapterData.currentPhase == 0x40)        // Neutral.
-    pal = 0x2000;
-  else if (gChapterData.currentPhase == 0x80)   // Enemy.
-    pal = 0x1000;
-  proc->phaseAPProc = (struct APProc*)APProc_Create(&REW_phaseAPDef, 0, 0, pal, 0, 0);
+  // Init action text.
+  Text_InitClear(&proc->sequenceDesc, 15);
+  Text_InitClear(&proc->sequenceDescAlt, 15);
   
-  // Arrow symbols' AP.
-  proc->upArrowAPProc = (struct APProc*)APProc_Create(&REW_upArrowAPDef, 0, 0, 0, 0, 0);
-  proc->downArrowAPProc = (struct APProc*)APProc_Create(&REW_downArrowAPDef, 0, 0, 0, 0, 0);
+  // Draw phase indicator.
+  proc->phaseAPProc = (struct APProc*)APProc_Create(&REW_phaseAPDef, 0, 0, 0, 0, 0);
   
-  // Draw action.
-  Text_InitClear(&proc->sequenceDesc, 15);  // Defaults colour to white.
-  Text_SetXCursor(&proc->sequenceDesc, 2);
+  // Clear up & down arrow AP proc pointers.
+  proc->upArrowAPProc = NULL;
+  proc->downArrowAPProc = NULL;
   
-  // Temp. This is here as reminder to me, so I know how to replace text.
-  //Text_DrawString(&proc->sequenceDesc, GetStringFromIndex(0x002));
-  //Text_Display(&proc->sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 5, 2));
-  //Text_Clear(&proc->sequenceDesc);
-  //Text_SetXCursor(&proc->sequenceDesc, 2);
+  EnableBgSyncByIndex(1);
+}
+
+// Refresh UI, draw action text, turncount, phase indicator,
+// moving map sprites, arrows.
+void REW_refreshUI(struct REW_ProcState* proc) {
+  int turn, actionNotFound;
+  u16 pal;
+  struct REW_RewindEntry* rewindEntry;
+  TextHandle* sequenceDesc, *turnNumberText;
   
+  // Refresh turn number.
+  if (proc->flags & REW_REFRESH_TURN) {
+    turn = gChapterData.turnNumber;
+    turnNumberText = turn & 1 ? &proc->turnNumberTextAlt : &proc->turnNumberText;
+    
+    Text_Clear(turnNumberText);
+    Text_SetColorId(turnNumberText, 2);    // Blue colour for turn number.
+    
+    if (turn < 10) {
+      // One-digit number.
+      Text_Advance(turnNumberText, 6);
+      Text_DrawNumber(turnNumberText, turn);
+    } else if (turn < 100) {
+      // Two-digit number.
+      Text_DrawNumber(turnNumberText, turn / 10);
+      Text_Advance(turnNumberText, 16);
+      Text_DrawNumber(turnNumberText, turn % 10);
+    } // We're not drawing three+ digit numbers. Because.
+    Text_Display(turnNumberText, TILEMAP_LOCATED(gBg0MapBuffer, 27, 1));
+    proc->flags &= ~REW_REFRESH_TURN;
+  }
+  
+  // Refresh phase indicator.
+  if (proc->flags & REW_REFRESH_PHASE) {
+    pal = 0;                                            // Ally.
+    if (gChapterData.currentPhase == FACTION_GREEN)
+      pal = 0x2000;                                     // Other.
+    else if (gChapterData.currentPhase == FACTION_RED)
+      pal = 0x1000;                                     // Enemy.
+    
+    proc->phaseAPProc->pHandle->tileBase &= 0x0FFF;
+    proc->phaseAPProc->pHandle->tileBase |= pal;
+    proc->flags &= ~REW_REFRESH_PHASE;
+  }
+  
+  // Draw or remove up arrow.
+  if ((proc->flags & REW_UNDO_AVAILABLE) && (proc->upArrowAPProc == NULL))
+    proc->upArrowAPProc = (struct APProc*)APProc_Create(&REW_upArrowAPDef, 0, 0, 0, 0, 0);
+  else if (!(proc->flags & REW_UNDO_AVAILABLE) && (proc->upArrowAPProc != NULL)) {
+    EndProc((Proc*)proc->upArrowAPProc);
+    proc->upArrowAPProc = NULL;
+  }
+  
+  // Draw or remove down arrow.
+  if ((proc->flags & REW_REDO_AVAILABLE) && (proc->downArrowAPProc == NULL))
+    proc->downArrowAPProc = (struct APProc*)APProc_Create(&REW_downArrowAPDef, 0, 0, 0, 0, 0);
+  else if (!(proc->flags & REW_REDO_AVAILABLE) && (proc->downArrowAPProc != NULL)) {
+    EndProc((Proc*)proc->downArrowAPProc);
+    proc->downArrowAPProc = NULL;
+  }
+  
+  // Clear potential MUs.
+  MU_EndAll();
+  proc->muActor = NULL;
+  proc->muTarget = NULL;
+  
+  // Draw action text.
   // TODO, this should become a switch for every action possible.
   // Maybe put this part in a separate routine as it could get huge.
-  int actionNotFound = true;
-  struct REW_RewindEntry* rewindEntry = proc->curSequence->entry;
+  
+  // Clear buffered screen entries.
+  for (int y = 0; y < 20; y++) {
+    for (int x = 0; x < 24; x++) {
+      gBg0MapBuffer[y * 0x20 + x] = 0;
+    }
+  }
+  
+  // Alternate texthandles to minimize text flickering.
+  sequenceDesc = proc->flags & REW_ALTERNATE_TEXT ? &proc->sequenceDescAlt : &proc->sequenceDesc;
+  proc->flags ^= REW_ALTERNATE_TEXT;
+  
+  Text_Clear(sequenceDesc);
+  Text_SetXCursor(sequenceDesc, 2);
+  actionNotFound = true;
+  rewindEntry = proc->curSequence->entry;
   while (actionNotFound) {
     switch (rewindEntry->diffType) {
       case UNIT_ACTION_COMBAT:
         actionNotFound = false;
         
-        REW_displayActor(proc, rewindEntry);
-        Text_DrawString(&proc->sequenceDesc, GetStringFromIndex(TEXTID(REW_combat))); // " attacked ".
-        REW_displayTarget(proc, REW_nextEntry(rewindEntry));
-        Text_DrawChar(&proc->sequenceDesc, ".");                                      // Period.
-        Text_Display(&proc->sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 5, 2));
+        REW_displayActor(proc, rewindEntry, sequenceDesc);
+        Text_DrawString(sequenceDesc, GetStringFromIndex(TEXTID(REW_combat))); // " attacked ".
+        REW_displayTarget(proc, REW_nextEntry(rewindEntry), sequenceDesc);
+        Text_DrawChar(sequenceDesc, ".");                                      // Period.
+        Text_Display(sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 5, 2));
+        break;
+      case REW_SEQUENCE_PHASECHANGE:
+        actionNotFound = false;
+        
+        switch (gChapterData.currentPhase) {
+          case FACTION_BLUE:
+            Text_DrawString(sequenceDesc, GetStringFromIndex(TEXTID(REW_phaseBlue)));
+            Text_Display(sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 6, 2));
+            break;
+          case FACTION_RED:
+            Text_Advance(sequenceDesc, 1);
+            Text_DrawString(sequenceDesc, GetStringFromIndex(TEXTID(REW_phaseRed)));
+            Text_Display(sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 6, 2));
+            break;
+          case FACTION_GREEN:
+          default:
+            Text_Advance(sequenceDesc, 4);
+            Text_DrawString(sequenceDesc, GetStringFromIndex(TEXTID(REW_phaseGreen)));
+            Text_Display(sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 6, 2));
+        }
         break;
       default:
         rewindEntry = REW_nextEntry(rewindEntry);
     }
   }
-  
-  /*
-  //Text_Clear(&text);
-  
-  DrawTextInline(NULL,
-                 TILEMAP_LOCATED(gBg0MapBuffer, 0, 0),
-                 0,
-                 1,
-                 4,
-                 GetStringFromIndex(0x3));
-  */
-  
-  EnableBgSyncByMask(0x3);
-  
-  //Text_Clear(struct TextHandle*)
-  //DrawTextInline(struct TextHandle*, u16* bg, int color, int xStart, int tileWidth, const char* cstring)
+  EnableBgSyncByIndex(0);
 }
 
 // Wait for key-input.
 void REW_handleInput(struct REW_ProcState* proc) {
-  // TODO
-}
-
-// Rewind actions. steps argument determines how many actions
-// are to be rewound. If steps is negative, then re-do actions.
-// E.g. -2 means, re-do two actions, +3 means, rewind 3 actions.
-int REW_rewind(struct REW_ProcState* proc, s16 steps) {
-  // TODO
   
-  return 1;     // Needs to return not 0 in order for proc to not yield.
-}
-
-// Re-do all actions.
-void REW_cancelRewind(struct REW_ProcState* proc) {
-  // TODO, determine how many steps to re-do and call REW_rewind.
+  // Up-press: rewind/undo action.
+  if ((gKeyState.repeatedKeys & KEY_DPAD_UP) && (proc->flags & REW_UNDO_AVAILABLE)) {
+    PlaySfx(0x66);
+    
+    // Undo action.
+    REW_undo(proc, proc->curSequence);
+    
+    // Set previous sequence as current sequence.
+    proc->curSequence = REW_prevSequence(proc->curSequence);
+    
+    // Update flags tracking if another undo is available.
+    if (!REW_isUndoAvailable(proc->curSequence)) { proc->flags &= ~REW_UNDO_AVAILABLE; }
+    proc->flags |= REW_REDO_AVAILABLE;
+    
+    // Draw previous sequence.
+    REW_refreshUI(proc);
+  } // Down-press: redo action.
+  else if ((gKeyState.repeatedKeys & KEY_DPAD_DOWN) && (proc->flags & REW_REDO_AVAILABLE)) {
+    PlaySfx(0x66);
+    
+    // Set next sequence as current sequence.
+    proc->curSequence = REW_nextSequence(proc->curSequence);
+    
+    // Redo action.
+    REW_redo(proc, proc->curSequence);
+    
+    // Update flags tracking if another redo is available.
+    if (!REW_isRedoAvailable(proc->curSequence)) { proc->flags &= ~REW_REDO_AVAILABLE; }
+    proc->flags |= REW_UNDO_AVAILABLE;
+    
+    // Draw next sequence.
+    REW_refreshUI(proc);
+  }
+  // TODO other buttons.
+  
 }
 
 // Clear BGs, APs & MUs.
