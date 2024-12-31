@@ -1,18 +1,21 @@
-@ Hook for REW_recordActionCombat.
-@ Hooked at 0x32330.
+@ Hook for REW_actionCombat.
+@ Hooked at 0x2A2C8.
 .thumb
 
-@ call REW_recordActionCombat.
-ldr   r2, =REW_recordActionCombat
-bl    GOTO_R2
+@ call REW_actionCombat.
+ldr   r0, =REW_actionCombat
+bl    GOTO_R0
 
 @ Vanilla, overwritten by hook.
-ldr   r0, =gProc_Battle
-mov   r1, r7
-ldr   r2, =ProcStartBlocking
-bl    GOTO_R2
+mov   r0, #0xB
+ldsb  r0, [r4, r0]
+cmp   r0, #0x0
+beq   return
+  ldr   r0, =0x802A2D5
+  GOTO_R0:
+  bx    r0
 
-@ Return.
-ldr   r2, =0x8032339
-GOTO_R2:
-bx    r2
+return:
+pop   {r4-r7}
+pop   {r4}
+pop   {r0}

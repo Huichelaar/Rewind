@@ -4,11 +4,21 @@
 PUSH
 
   // Combat action.
-  ORG 0x32330
+  ORG 0x2A2C8
     jumpToHack(REW_actionHookCombat)
-
+  
+  // Run additional routines when changing phases.
+  // These routine set up a phase change sequence in rewind buffer.
+  ORG 0x15410
+    jumpToHack(REW_hookPrePhaseChange)
+    // TODO, ClearActiveFactionGrayedStates actually does something with BWL data?
+    // Need to handle that as well. Can take advantage of this same hook.
+  ORG 0x15450
+    jumpToHack(REW_hookPostPhaseChange)
 
 POP
 
 ALIGN 4; REW_actionHookCombat:
 #include "combat.lyn.event"
+ALIGN 4
+#include "phaseChange.lyn.event"

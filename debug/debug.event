@@ -1,4 +1,18 @@
 // Various changes to help test stuff.
+#define REW_DEBUG_status_poison 1
+#define REW_DEBUG_status_sleep 2
+#define REW_DEBUG_status_silenced 3
+#define REW_DEBUG_status_berserk 4
+#define REW_DEBUG_status_attack 5
+#define REW_DEBUG_status_defense 6
+#define REW_DEBUG_status_crit 7
+#define REW_DEBUG_status_avoid 8
+#define REW_DEBUG_status_sick 9
+#define REW_DEBUG_status_recover 10
+#define REW_DEBUG_status_petrify 11
+#define REW_DEBUG_status_12 12
+#define REW_DEBUG_status_13 13
+
 #include "event/event1.event"
 
 PUSH
@@ -8,8 +22,38 @@ PUSH
   
   ORG 0x8B3658
   POIN REW_DEBUG_event
+  
+  // Set prologue crew's defenses to max.
+  ORG 0x803D74; BYTE 0x1F; ORG 0x803E10; BYTE 0x1F; ORG 0x803DDC; BYTE 0x1F
+  ORG 0x803E10; BYTE 0x1F; ORG 0x803E44; BYTE 0x1F; ORG 0x803E78; BYTE 0x1F
+  ORG 0x803EAC; BYTE 0x1F; ORG 0x803EE0; BYTE 0x1F; ORG 0x803F14; BYTE 0x1F
 
 POP
 
 ALIGN 4; REW_DEBUG_map:
 #incbin "map/map1_data.dmp"
+
+ALIGN 4; REW_DEBUG_ASMC_setStatus1:
+SHORT 0x4801 0x4902 0x8001 0x4770
+WORD 0x202BE4C+0x30
+WORD ((REW_DEBUG_status_poison) | (2 << 4) | (0 << 8) | (0 << 12));
+
+ALIGN 4; REW_DEBUG_ASMC_setStatus2:
+SHORT 0x4801 0x4902 0x8001 0x4770
+WORD 0x202BE94+0x12
+WORD 0x050A
+
+ALIGN 4; REW_DEBUG_ASMC_breakWeapon1:
+SHORT 0x4801 0x4902 0x8001 0x4770
+WORD 0x202BEDC+0x20
+WORD 0x0114
+
+ALIGN 4; REW_DEBUG_ASMC_breakWeapon2:
+SHORT 0x4801 0x4902 0x8001 0x4770
+WORD 0x202D244+0x20
+WORD 0x041F
+
+ALIGN 4; REW_DEBUG_ASMC_breakBallista1:
+SHORT 0x4801 0x4902 0x8001 0x4770
+WORD 0x203A614+0x6
+WORD 0x0001

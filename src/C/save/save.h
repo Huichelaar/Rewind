@@ -2,6 +2,10 @@
 #define SAVE_H
 #include "gbafe.h"
 
+// Vanilla
+void CpPhase_Init(Proc* proc);                // 0x80396AD
+void SaveSuspendedGame(int saveBlockId);      // 0x80A5A49
+
 // EMS.
 struct SaveChunkDecl {
 	/* 00 */ u16 offset;
@@ -22,6 +26,7 @@ void* REW_findCurSequence();
 void REW_clearCurSequence();
 void* REW_findRewindBuf();
 void REW_clearRewindBuf();
+void REW_cpPhaseChangeSave(Proc* proc);
 void REW_loadActiveUnitMoveOrigin(void* src, u32 size);
 void REW_saveActiveUnitMoveOrigin(void* dest, u32 size);
 void REW_loadCurSequence(void* src, u32 size);

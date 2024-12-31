@@ -37,6 +37,22 @@ void REW_clearRewindBuf() {
   WriteAndVerifySramFast(&val, REW_findRewindBuf(), 4);
 }
 
+// Save non-player phase changes.
+// Replaces proc call to CpPhase_Init at
+// 0x5A7F10, hence why we call CpPhase_Init.
+void REW_cpPhaseChangeSave(Proc* proc) {
+  
+  // Save only if phase is not skipped.
+  if (GetPhaseAbleUnitCount(gChapterData.currentPhase) > 0) {
+    gActionData.suspendPointType = SUSPEND_POINT_CPPHASE;
+    SaveSuspendedGame(SAVE_BLOCK_SUSPEND);
+  }
+  
+  // This function call was overwritten by inline
+  // insertion of the REW_cpPhaseChangeSave call
+  CpPhase_Init(proc);
+}
+
 // Load active unit's position before acting.
 // We need this so we can track where unit
 // was before undertaking action.
@@ -96,14 +112,10 @@ void REW_saveRewind(void* dest, u32 size) {
   if (REW_curSequence->size == 0)
     return;
   
-  // Don't update rewind data during action.
-  if (gActionData.suspendPointType == SUSPEND_POINT_DURINGACTION)
-    return;
-  
-  // Don't update rewind data during
-  // phasechange if phase will be skipped.
-  if (gActionData.suspendPointType == SUSPEND_POINT_PHASECHANGE &&
-     (GetPhaseAbleUnitCount(gChapterData.currentPhase) == 0))
+  // Don't update rewind data during action
+  // or during phasechange
+  if (gActionData.suspendPointType == SUSPEND_POINT_DURINGACTION ||
+      gActionData.suspendPointType == SUSPEND_POINT_PHASECHANGE)
     return;
   
   // Load existing rewind data into buffer.
@@ -112,17 +124,20 @@ void REW_saveRewind(void* dest, u32 size) {
   if (REW_rewindBuffer->size != 0) {
     // Buffer contains at least one sequence.
     prevSeqSize = REW_rewindBuffer->end->size;
+  } else {
+    // Buffer is empty, initialize size.
+    REW_rewindBuffer->size = REW_BUFFER_BASESIZE;
   }
   
   // Create new sequence at the end of rewindBuffer.
   // Copy REW_curSequence to it.
-  newSeq = (struct REW_RewindSequence*)((u32)REW_rewindBuffer + REW_rewindBuffer->size + 8);
+  newSeq = (struct REW_RewindSequence*)((u32)REW_rewindBuffer + REW_rewindBuffer->size);
   newSeq->sizePrev = prevSeqSize;
   newSeq->size = REW_curSequence->size;
-  memcpy((void*)&newSeq->entry[0], (void*)&REW_curSequence->entry[0], REW_curSequence->size);
+  memcpy((void*)&newSeq->entry[0], (void*)&REW_curSequence->entry[0], REW_curSequence->size - REW_SEQUENCE_BASESIZE);
   
   // Adjust REW_rewindBuffer params.
-  REW_rewindBuffer->size += newSeq->size + 4;
+  REW_rewindBuffer->size += newSeq->size;
   REW_rewindBuffer->end = newSeq;
   
   // Save the data.

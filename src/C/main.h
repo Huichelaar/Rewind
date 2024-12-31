@@ -3,25 +3,46 @@
 #include "gbafe.h"
 
 enum {
-  // difftypes. First 0x3F values are reserved for actions,
+  // Entry & data sizes. Keep having to change these
+  // so I made them into an enum.
+  REW_BUFFER_BASESIZE = 8,
+  REW_SEQUENCE_BASESIZE = 4,
+  REW_ENTRY_BASESIZE = 4,
+  REW_ENTRY_PHASECHANGEDATA_BASESIZE = 0,
+  REW_ENTRY_UNITCHANGEDATA_BASESIZE = 0,
+  
+  // diffTypes. First 0x3F values are reserved for actions,
   // such as UNIT_ACTION_COMBAT as given in FEClib's action.h.
-  REW_SEQUENCE_PHASECHANGE = 0x40,
+  REW_ACTION_PHASECHANGE =  0x40,
+  REW_CONSEQ_UNITCHANGE =   0x41,
   
   // REW_RewindPhaseChangeData.flags.
-  REW_PHASECHANGE_TURNINCR = 1,
-  REW_PHASECHANGE_SKIPPHASE = 2
+  REW_PHASE_PRE_ALLY =    0x0,
+  REW_PHASE_PRE_NPC =     0x1,
+  REW_PHASE_PRE_ENEMY =   0x2,
+  REW_PHASE_PRE_MASK =    0x3,
+  REW_PHASE_POST_ALLY =   0x0,
+  REW_PHASE_POST_NPC =    0x4,
+  REW_PHASE_POST_ENEMY =  0x8,
+  REW_PHASE_POST_MASK =   0xC,
+  REW_PHASECHANGE_TURNINCR =  0x10,
+  REW_PHASECHANGE_SKIPPHASE = 0x20,
+
+  // Sizes of structs.
+  REW_UNITSIZE = 0x48,
+  REW_BWLSIZE = 0x10,
+
+  // Additional 'unit' changes.
+  REW_UNITOFFS_BWL = 0x48,
+  REW_UNITOFFS_BALLISTA = REW_UNITOFFS_BWL + REW_BWLSIZE,
 };
 
 // Rewind entry. Action or consequence of action.
 struct REW_RewindEntry {
   /* 00 */ u8 diffType;                     // Can be actionID or other identifiers.
-  /* 01 */ u8 eventID;
-  /* 02 */ u16 flags;                       // Additional flags.
-  /* 04 */ s8 xPrev;                        // X-Coordinate prior to movement.
-  /* 05 */ s8 yPrev;
-  /* 06 */ s8 xCur;                         // X-Coordinate after movement.
-  /* 07 */ s8 yCur;
-  /* 08 */ u8 data[];                       // Structure & size depends on diffType.
+  /* 01 */ u8 flags;                        // Can be just about anything depending on diffType.
+  /* 02 */ u16 size;                        // Size of entry.
+  /* 04 */ u8 data[];                       // Structure depends on diffType.
 };
 
 // Rewind sequence. Action + consequences.
@@ -41,45 +62,59 @@ struct REW_RewindBuffer {
 };
 extern struct REW_RewindBuffer* REW_rewindBuffer;
 
-// Data stored in RewindEntry.data.
-// Phase change rewind entry.
-struct REW_RewindPhaseChangeData {
-  /* 00 */ u16 size;                        // Size of the rest of struct instance in bytes.
-  /* 02 */ u8 flags;                        // Turn incr and skip flags.
-  /* 03 */ u8 phasePre;                     // Phase before phasechange.
-  /* 04 */ u8 phasePost;                    // Phase after phasechange.
-  /* 05 */ u8 unitIDs[];                    // array of greyed-out units.
-};
-
 // Combat rewind entry.
-struct REW_RewindCombatData {
-  /* 00 */ u16 size;                        // Size of the rest of struct instance in bytes.
-  /* 02 */ struct Changes {
-    /* 00 */ u8 offs;                       // Offset of changed attribute (HP, exp, etc.)
-    /* 01 */ u8 diff;                       // Difference of attribute pre-combat vs post-combat.
-  } changes[];                              // Size varies based on how many attributes were changed.
-};
+struct REW_UnitChangeData {
+  /* 00 */ u8 offs;                       // Offset of changed attribute (HP, exp, etc.)
+  /* 01 */ u8 diff;                       // Difference of attribute pre-combat vs post-combat.
+};                                        // Size varies based on how many attributes were changed.
 
 void REW_clearRewindSeq(struct REW_RewindSequence* sequence);
-struct REW_RewindEntry* REW_createSeqEntry(struct REW_RewindSequence* sequence);
-struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* rewindEntry);
+struct REW_RewindEntry* REW_createSeqEntry(struct REW_RewindSequence* seq);
 struct REW_RewindSequence* REW_nextSequence(struct REW_RewindSequence* sequence);
 struct REW_RewindSequence* REW_prevSequence(struct REW_RewindSequence* sequence);
+struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* entry);
+struct REW_RewindEntry* REW_prevEntry(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry);
+struct REW_RewindEntry* REW_lastEntry(struct REW_RewindSequence* seq);
 void REW_alignSequence(struct REW_RewindSequence* sequence);
 
-u8 REW_nextPhase(u8 phase, u8* turn, u8* skip);
-
-// Sequences.
-void REW_seqPhaseChange();
-
 // Actions.
-void REW_storeCombatData(struct Unit* unit, struct BattleUnit* bu, struct REW_RewindSequence* rewindSeq, struct REW_RewindEntry* rewindEntry);
-void REW_recordActionCombat();
+u8 REW_nextPhase(u8 phase, u8* turn, u8* skip);
+void REW_actionPrePhaseChange();
+void REW_actionPostPhaseChange();
+void REW_storeCombatData(struct Unit* unit, struct BattleUnit* bu, int ballista, s8 xPrev, s8 yPrev, struct REW_RewindSequence* rewindSeq, struct REW_RewindEntry* rewindEntry);
+void REW_actionCombat();
 
 // Consequences.
 // TODO
 
 // Vanilla.
+extern void BattleApplyExpGains(); // 0x802B92D
 extern int GetBattleUnitUpdatedWeaponExp(struct BattleUnit* bu);  // 0x802C0B4
+
+
+#pragma pack(1)
+// ^ This solves an issue with alignment.
+// Idk why exactly, but I got it from here:
+// https://stackoverflow.com/a/24888194
+// Maybe it's related to running GCC on Windows.
+struct UnitUsageStats {
+  /* 000 */ unsigned lossAmt     : 8;
+  /* 008 */ unsigned favval      : 16;
+  /* 024 */ unsigned actAmt      : 8;
+  /* 032 */ unsigned statViewAmt : 8;
+  /* 040 */ unsigned deathLoc    : 6;
+  /* 046 */ unsigned deathTurn   : 10;
+  /* 056 */ unsigned deployAmt   : 6;
+  /* 062 */ unsigned moveAmt     : 10;
+  /* 072 */ unsigned deathCause  : 4;
+  /* 076 */ unsigned expGained   : 12;
+  /* 088 */ unsigned winAmt      : 10;
+  /* 098 */ unsigned battleAmt   : 12;
+  /* 110 */ unsigned killerPid   : 9;
+  /* 119 */ unsigned deathSkirm  : 1;
+  /* 120 */ unsigned pad         : 8;
+};
+#pragma pack()
+extern struct UnitUsageStats* BWL_GetEntry(u8 pid);  // 0x80A4CFC
 
 #endif // MAIN_H
