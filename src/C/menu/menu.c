@@ -69,6 +69,29 @@ void REW_undo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence) {
         //}
         break;
       
+      // Breaking an obstacle.
+      case REW_ACTION_BREAK:
+        ;
+        Trap* trapData = (Trap*)entry->data;
+        Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
+        
+        if (trap != NULL) {
+          
+          // Obstacle was not destroyed.
+          // Update HP.
+          trap->data[0] -= trapData->data[0];
+        } else {
+          
+          // Obstacle was destroyed.
+          // Undo map change.
+          int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
+          UntriggerMapChange(mapChangeID, 0, NULL);
+          
+          // Add obstacle back as trap.
+          AddTrap(trapData->xPosition, trapData->yPosition, trapData->type, 0 - trapData->data[0]);
+        }
+        break;
+      
       // Generic unit changes.
       case REW_CONSEQ_UNITCHANGE:
       
@@ -158,6 +181,27 @@ void REW_redo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence) {
           //if (UNIT_IS_VALID(unit))
             //unit->state &= ~US_UNSELECTABLE;
         //}
+        break;
+      
+      // Breaking an obstacle.
+      case REW_ACTION_BREAK:
+        ;
+        Trap* trapData = (Trap*)entry->data;
+        Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
+        
+        // Update obstacle HP.
+        trap->data[0] += trapData->data[0];
+        
+        if (trap->data[0] == 0) {
+          
+          // Obstacle was destroyed.
+          // Remove obstacle.
+          RemoveTrap(trap);
+          
+          // Redo map change.
+          int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
+          TriggerMapChanges(mapChangeID, 0, NULL);
+        }
         break;
       
       // Generic unit changes.
@@ -276,20 +320,46 @@ void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewind
 }
 
 // Draws target (right unit) name & starts MU.
+// If obstacle, draw obstacle name.
 void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc) {
-  Unit* unit = GetUnit(rewindEntry->flags);
-  u16 name = unit->pCharacterData->nameTextId;
-  u8 class = unit->pClassData->number;
-  Text_DrawString(sequenceDesc, GetStringFromIndex(name));     // Draw target's name.
-  int targetX = (Text_GetXCursor(sequenceDesc) + 43) << 4;
+  if (rewindEntry->diffType == UNIT_ACTION_COMBAT) {
+    // Unit.
+    Unit* unit = GetUnit(rewindEntry->flags);
+    u16 name = unit->pCharacterData->nameTextId;
+    u8 class = unit->pClassData->number;
+    Text_DrawString(sequenceDesc, GetStringFromIndex(name));     // Draw target's name.
+    int targetX = (Text_GetXCursor(sequenceDesc) + 43) << 4;
+    
+    proc->muTarget = MU_CreateInternal(0, 0, class, -1, GetUnitMapSpritePaletteIndex(unit));
+    proc->muTarget->objPriorityBits = 0x400;                // Priority 1;
+    proc->muTarget->pAPHandle->tileBase &= 0xF3FF;          // Draw sprite
+    proc->muTarget->pAPHandle->tileBase |= 0x0400;          // over UI.   
+    proc->muTarget->xSubPosition += 128 + targetX;          // Adjust x position.
+    proc->muTarget->ySubPosition += 384;                    // Adjust y position.
+    MU_SetFacing(proc->muTarget, MU_FACING_SELECTED);
+  } else if (rewindEntry->diffType == REW_ACTION_BREAK) {
+    // Obstacle.
+    char* name = (rewindEntry->flags & REW_OBSTACLE_SNAG) ? GetTerrainName(REW_SNAG_ID) : GetTerrainName(REW_WALL_ID);
+    Text_DrawString(sequenceDesc, name);    // Draw target's name.
+  }
+}
+
+void REW_displayCombatVerb(struct REW_RewindEntry* entry, TextHandle* sequenceDesc) {
+  u16 textID = TEXTID(REW_combat);
+  struct REW_RewindEntry* nextEntry = REW_nextEntry(entry);
   
-  proc->muTarget = MU_CreateInternal(0, 0, class, -1, GetUnitMapSpritePaletteIndex(unit));
-  proc->muTarget->objPriorityBits = 0x400;                // Priority 1;
-  proc->muTarget->pAPHandle->tileBase &= 0xF3FF;          // Draw sprite
-  proc->muTarget->pAPHandle->tileBase |= 0x0400;          // over UI.   
-  proc->muTarget->xSubPosition += 128 + targetX;          // Adjust x position.
-  proc->muTarget->ySubPosition += 384;                    // Adjust y position.
-  MU_SetFacing(proc->muTarget, MU_FACING_SELECTED);
+  if (nextEntry->diffType == REW_ACTION_BREAK) {
+    Trap* trap = (Trap*)nextEntry->data;
+    trap = GetSpecificTrapAt(trap->xPosition, trap->yPosition, trap->type);
+    if (trap == NULL)
+      textID = TEXTID(REW_obstacleDestroyed);
+  } else {
+    if (false)        // TODO check if actor was killed.
+      ;
+    else if (false)   // TODO check if target was killed.
+      ;
+  }
+  Text_DrawString(sequenceDesc, GetStringFromIndex(textID));
 }
 
 // Initialize UI, draw box, turn text, phase text.
@@ -422,7 +492,7 @@ void REW_refreshUI(struct REW_ProcState* proc) {
         actionNotFound = false;
         
         REW_displayActor(proc, rewindEntry, sequenceDesc);
-        Text_DrawString(sequenceDesc, GetStringFromIndex(TEXTID(REW_combat))); // " attacked ".
+        REW_displayCombatVerb(rewindEntry, sequenceDesc);
         REW_displayTarget(proc, REW_nextEntry(rewindEntry), sequenceDesc);
         Text_DrawChar(sequenceDesc, ".");                                      // Period.
         Text_Display(sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 5, 2));
@@ -518,4 +588,20 @@ void REW_procEnd(struct REW_ProcState* proc) {
   
   ClearBG0BG1();
   UnlockGameLogic();
+}
+
+// Need to hide units again if we:
+//  - undo a de-roofing.
+//  - redo a roofing.
+void REW_hideRoofedUnits() {
+
+  for (int i = 1; i < 0xC0; i++) {
+    Unit* unit = GetUnit(i);
+    if (!UNIT_IS_VALID(unit))
+      continue;
+    
+    if (gMapTerrain[unit->yPos][unit->xPos] == REW_ROOF_ID) {
+      unit->state |= US_UNDER_A_ROOF | US_HIDDEN;
+    }
+  }
 }

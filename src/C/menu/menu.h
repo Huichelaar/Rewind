@@ -15,7 +15,9 @@ struct APProc {
     /* 58 */ u32 yPosition;
 };
 
-const extern void UnpackUiVArrowGfx(int chr, int pal);  // 0x80B53BC 
+const extern void UnpackUiVArrowGfx(int chr, int pal);  // 0x80B53BC
+const extern void triggerMapChanges(u16 id, s8 flag, Proc* parent);  // 0x800BAF8
+const extern void UntriggerMapChange(u16 id, s8 flag, Proc* parent);  // 0x800BB48
 
 // enums
 enum {
@@ -54,9 +56,11 @@ void REW_initProc(struct REW_ProcState* proc);
 void REW_handleInput(struct REW_ProcState* proc);
 void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc);
 void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc);
+void REW_displayCombatVerb(struct REW_RewindEntry* entry, TextHandle* sequenceDesc);
 void REW_initUI(struct REW_ProcState* proc);
 void REW_refreshUI(struct REW_ProcState* proc);
 void REW_procEnd(struct REW_ProcState* proc);
+void REW_hideRoofedUnits();
 
 // Data.
 const extern u16*  REW_rewindSize;                    // Size of rewindBuffer.
@@ -65,7 +69,8 @@ const extern void* REW_phaseAPDef;                    // Phase icon AP Definitio
 const extern void* REW_upArrowAPDef;                  // Up arrow AP Definition.
 const extern void* REW_downArrowAPDef;                // Down arrow AP Definition.
 const extern u16 REW_combat, REW_phaseIndicator,      // Text entries.
-REW_phaseBlue, REW_phaseRed, REW_phaseGreen;
+REW_phaseBlue, REW_phaseRed, REW_phaseGreen,
+REW_obstacleDestroyed;
 
 
 #endif // MENU_H

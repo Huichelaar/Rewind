@@ -7,9 +7,10 @@
 #define REW_menuCommandName $D4C
 #define REW_menuCommandDesc $D4D
 #define REW_combat $D4E
-#define REW_phaseIndicator $D4F
-#define REW_phaseBlue $D50
-#define REW_phaseRed $D51
-#define REW_phaseGreen $D52
+#define REW_obstacleDestroyed $D4F
+#define REW_phaseIndicator $D50
+#define REW_phaseBlue $D51
+#define REW_phaseRed $D52
+#define REW_phaseGreen $D53
 
 #endif // TEXT_DEFINITIONS_ENTRIES_TXT

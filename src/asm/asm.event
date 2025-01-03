@@ -6,10 +6,23 @@ PUSH
   // Run an additional routine when starting chapters
   // TODO this could be moved to a generic ChapterBeginCalcloop.
   ORG 0x59A23C
-  POIN REW_chapterBeginCalcLoop | 1
+    POIN REW_chapterBeginCalcLoop | 1
   
+  // Additional save to ensure phase-change is saved for all factions.
   ORG 0x5A7F14
-  POIN REW_cpPhaseChangeSave | 1
+    POIN REW_cpPhaseChangeSave | 1
+  
+  // Allow mapchanges to hide units under roofs.
+  // Vanilla unhides them, but only hides upon unit load.
+  ORG 0xBB28          // TriggerMapChange.
+    SHORT 0x467C      // mov r4, r15
+    SHORT 0x0         // NOP
+    jumpToHack(REW_hookHideUnderRoof)
+  
+  ORG 0xBB7A          // UntriggerMapChange.
+    SHORT 0x467C      // mov r4, r15
+    jumpToHack(REW_hookHideUnderRoof)
+    SHORT 0x0         // NOP
 
 POP
 
@@ -21,3 +34,6 @@ POIN 0x85971    // SetEventId_0x84. Calcloop replaced this call.
 POIN REW_clearCurSequence | 1
 POIN REW_clearRewindBuf | 1
 WORD 0
+
+ALIGN 4; REW_hookHideUnderRoof:
+#include "hideUnderRoof.lyn.event"

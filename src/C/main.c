@@ -311,10 +311,6 @@ void REW_storeCombatData(struct Unit* unit,
   //  - Item re-ordering.
   UnitRemoveInvalidItems(&buCopy);
   
-  //  - Exp gain. Removed by hook.
-  if (gBattleTarget.unit.index)
-    BattleApplyExpGains();
-  
   // Now store changes of unit.
   struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)rewindEntry->data;
   
@@ -363,19 +359,6 @@ void REW_storeCombatData(struct Unit* unit,
       if (bwlVal > 4000)
         bwlVal = 4000;
       bwlPost.expGained = bwlVal;
-    
-      // Exp-Favoritism.
-      // Commented out as other actions increase favoritism
-      // but don't get undone when rewinding.
-      /*
-      bwlVal = bwlPost.favval + bu->expGain;
-      if (bwlVal > 0x4000)
-        bwlVal = 0x4000;
-      else if (bwlVal < 0)
-        bwlVal = 0;
-      
-      bwlPost.favval = bwlVal;
-      */
     }
     
     // Don't apply if target is obstacle.
@@ -386,17 +369,6 @@ void REW_storeCombatData(struct Unit* unit,
       if (bwlVal > 4000)
         bwlVal = 4000;
       bwlPost.battleAmt = bwlVal;
-      
-      // Battle-Favoritism.
-      // Commented out as other actions increase favoritism
-      // but don't get undone when rewinding.
-      /*
-      bwlVal = bwlPost.favval + 4;
-      if (bwlVal > 0x4000)
-        bwlVal = 0x4000;
-      
-      bwlPost.favval = bwlVal;
-      */
     }
     
     for (int i = 0; i < REW_BWLSIZE; i++) {
@@ -458,10 +430,10 @@ void REW_actionCombat() {
   
   // Target.
   rewindEntry = REW_createSeqEntry(rewindSeq);
-  rewindEntry->diffType = UNIT_ACTION_COMBAT;   //  TODO Incorporate deaths and/or other flags.
-  rewindEntry->flags = target->index;
   
   if (target) {
+    rewindEntry->diffType = UNIT_ACTION_COMBAT;   //  TODO Incorporate deaths and/or other flags.
+    rewindEntry->flags = target->index;
     if (gBattleTarget.unit.curHP == 0) {
       // TODO handle death.
       //  - PidStatsRecordBattleRes, record loss if target is blue.
@@ -480,7 +452,26 @@ void REW_actionCombat() {
                           rewindEntry);
     }
   } else  {
-    // TODO obstacle
-    ;
+    // Obstacle.
+    Trap* trap = GetTrapAt(gBattleTarget.unit.xPos, gBattleTarget.unit.yPos);
+    
+    rewindEntry->diffType = REW_ACTION_BREAK;   // Snags & walls.
+    rewindEntry->flags = 0;
+    
+    // If terrain is wall, do nothing, if snag, orr 1 with flags.
+    if (gMapTerrain[gBattleTarget.unit.yPos][gBattleTarget.unit.xPos] == REW_SNAG_ID)
+      rewindEntry->flags |= REW_OBSTACLE_SNAG;
+    
+    rewindEntry->size = REW_ENTRY_BASESIZE;
+    
+    Trap* trapData = (Trap*)rewindEntry->data;
+    trapData->xPosition = trap->xPosition;
+    trapData->yPosition = trap->yPosition;
+    trapData->type = trap->type;
+    trapData->data[0] = gBattleTarget.unit.curHP - trap->data[0];
+    
+    rewindEntry->size += REW_ENTRY_OBSTACLE_BASESIZE;
+    rewindSeq->size += rewindEntry->size;
+    REW_alignSequence(rewindSeq);
   }
 }

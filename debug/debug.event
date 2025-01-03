@@ -13,15 +13,49 @@
 #define REW_DEBUG_status_12 12
 #define REW_DEBUG_status_13 13
 
-#include "event/event1.event"
+#include "event/events.event"
+#include "map/maps.event"
 
 PUSH
   
-  ORG 0x8B364C
-  POIN REW_DEBUG_map
+  // Ch0 wall health
+  ORG 0x8B08BC
+  BYTE 17
   
+  // Tile anims.
+  ORG 0x8B0899
+  //BYTE 0x5
+  BYTE 0x0
+  
+  // Object map.
+  ORG 0x8B3640
+  //POIN 0x198D8C
+  POIN 0x1816B8
+  
+  // Palette.
+  ORG 0x8B3644
+  //POIN 0x1AEBF0
+  POIN 0x1AE470
+  
+  // Tile config.
+  ORG 0x8B3648
+  //POIN 0x1AB69C
+  POIN 0x1A6604
+  
+  // Map.
+  ORG 0x8B364C
+  //POIN REW_DEBUG_map1
+  POIN REW_DEBUG_map2
+  
+  // Map changes.
+  ORG 0x8B3654
+  //POIN REW_DEBUG_map1Changes
+  POIN REW_DEBUG_map2Changes
+  
+  // Events.
   ORG 0x8B3658
-  POIN REW_DEBUG_event
+  //POIN REW_DEBUG_event1
+  POIN REW_DEBUG_event2
   
   // Set prologue crew's defenses to max.
   ORG 0x803D74; BYTE 0x1F; ORG 0x803E10; BYTE 0x1F; ORG 0x803DDC; BYTE 0x1F
@@ -29,9 +63,6 @@ PUSH
   ORG 0x803EAC; BYTE 0x1F; ORG 0x803EE0; BYTE 0x1F; ORG 0x803F14; BYTE 0x1F
 
 POP
-
-ALIGN 4; REW_DEBUG_map:
-#incbin "map/map1_data.dmp"
 
 ALIGN 4; REW_DEBUG_ASMC_setStatus1:
 SHORT 0x4801 0x4902 0x8001 0x4770

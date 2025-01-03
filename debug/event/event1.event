@@ -1,7 +1,5 @@
-// Events for debug chapter.
-#define _SETVAL SVAL
-
-ALIGN 4; REW_DEBUG_event:
+ALIGN 4; REW_DEBUG_event1:
+{
 
 POIN TurnBasedEvents
 POIN CharacterBasedEvents
@@ -120,3 +118,4 @@ EndAttack
 FIG1 Garcia ONeill IronAxe
 NoFade
 ENDA
+}

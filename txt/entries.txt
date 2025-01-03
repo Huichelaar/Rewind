@@ -8,6 +8,9 @@ TODO description of rewind.[X]
 ## REW_combat
  attacked [X]
 
+## REW_obstacleDestroyed
+ destroyed [X]
+
 ## REW_phaseIndicator
 Phase [X]
 

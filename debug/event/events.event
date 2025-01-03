@@ -1,0 +1,4 @@
+#define _SETVAL SVAL
+
+#include "event1.event"
+#include "event2.event"
