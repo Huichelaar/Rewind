@@ -13,7 +13,7 @@ POIN 0x0 0x0 0x0 0x0 0x0 0x0
 POIN BeginningScene EndingScene
 
 ALIGN 4; TurnBasedEvents:
-TurnEventEnemy(8,debugSceneTurn1,1)
+//TurnEventEnemy(8,debugSceneTurn1,1)
 END_MAIN
 
 ALIGN 4; CharacterBasedEvents:
@@ -82,12 +82,12 @@ REDA [6, 1] 0 0 0 0
 ALIGN 4; BeginningScene:
 LOAD1 1 PlayerUnits
 ENUN
-LOAD1 1 PlayerUnits2
-ENUN
+//LOAD1 1 PlayerUnits2
+//ENUN
 LOAD1 1 EnemyUnits
 ENUN
-LOAD1 1 EnemyReinf1
-ENUN
+//LOAD1 1 EnemyReinf1
+//ENUN
 ASMC REW_DEBUG_ASMC_setStatus1 | 1
 ASMC REW_DEBUG_ASMC_setStatus2 | 1
 ASMC REW_DEBUG_ASMC_breakWeapon1 | 1

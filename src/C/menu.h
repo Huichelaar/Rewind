@@ -1,23 +1,12 @@
 #ifndef MENU_H
 #define MENU_H
 #include "gbafe.h"
-#include "../save/save.h"
+#include "internal.h"
+#include "main.h"
+#include "save/save.h"
 
 // Macros.
 #define TEXTID(textEntry) (u16)(u32)&textEntry        // For use with non-vanilla text.
-
-// Vanilla.
-struct APProc {
-    /* 00 */ PROC_HEADER;
-    /* 29 */ u8 _pad[0x50-0x29];
-    /* 50 */ APHandle* pHandle;
-    /* 54 */ u32 xPosition;
-    /* 58 */ u32 yPosition;
-};
-
-const extern void UnpackUiVArrowGfx(int chr, int pal);  // 0x80B53BC
-const extern void triggerMapChanges(u16 id, s8 flag, Proc* parent);  // 0x800BAF8
-const extern void UntriggerMapChange(u16 id, s8 flag, Proc* parent);  // 0x800BB48
 
 // enums
 enum {
@@ -50,8 +39,6 @@ struct REW_ProcState {
   /* 60 */ struct APProc* downArrowAPProc;
 };
 const ProcInstruction REW_procScr[];
-void REW_undo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence);
-void REW_redo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence);
 void REW_initProc(struct REW_ProcState* proc);
 void REW_handleInput(struct REW_ProcState* proc);
 void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc);
@@ -60,7 +47,6 @@ void REW_displayCombatVerb(struct REW_RewindEntry* entry, TextHandle* sequenceDe
 void REW_initUI(struct REW_ProcState* proc);
 void REW_refreshUI(struct REW_ProcState* proc);
 void REW_procEnd(struct REW_ProcState* proc);
-void REW_hideRoofedUnits();
 
 // Data.
 const extern u16*  REW_rewindSize;                    // Size of rewindBuffer.
@@ -72,5 +58,17 @@ const extern u16 REW_combat, REW_phaseIndicator,      // Text entries.
 REW_phaseBlue, REW_phaseRed, REW_phaseGreen,
 REW_obstacleDestroyed;
 
+// Vanilla.
+struct APProc {
+    /* 00 */ PROC_HEADER;
+    /* 29 */ u8 _pad[0x50-0x29];
+    /* 50 */ APHandle* pHandle;
+    /* 54 */ u32 xPosition;
+    /* 58 */ u32 yPosition;
+};
+
+const extern void UnpackUiVArrowGfx(int chr, int pal);  // 0x80B53BC
+const extern void triggerMapChanges(u16 id, s8 flag, Proc* parent);  // 0x800BAF8
+const extern void UntriggerMapChange(u16 id, s8 flag, Proc* parent);  // 0x800BB48
 
 #endif // MENU_H

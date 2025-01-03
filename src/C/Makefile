@@ -1,5 +1,5 @@
 .SUFFIXES:
-.PHONY: all clean
+.PHONY: all main clean
 
 # making sure devkitARM exists and is set up
 ifeq ($(strip $(DEVKITARM)),)
@@ -24,6 +24,12 @@ CFLAGS := $(ARCH)$(INCFLAGS) -Wall -Os -mtune=arm7tdmi -mlong-calls
 LYNREF := C:/FE-CLib/reference/FE8U.o
 
 # listing files
+CFILEMAIN := main.c
+SFILEMAIN := main.s
+OFILEMAIN := $(CFILEMAIN:.c=.o) $(SFILEMAIN:.asm=.o)
+LYNFILEMAIN := $(OFILEMAIN:.o=.lyn.event)
+DMPFILEMAIN := $(OFILEMAIN:.o=.dmp)
+
 CFILES := $(wildcard *.c)
 SFILES := $(wildcard *.asm)
 OFILES := $(CFILES:.c=.o) $(SFILES:.asm=.o)
@@ -43,6 +49,9 @@ CDEPFLAGS = -MD -MT $*.o -MT $*.s -MF $(DEPSDIR)/$(notdir $*).d -MP
 
 # "make all" phony targets
 all: $(OFILES) $(ASMFILES) $(LYNFILES) $(DMPFILES);
+
+# make main only.
+main: $(OFILEMAIN) $(SFILEMAIN) $(LYNFILEMAIN) $(DMPFILEMAIN);
 
 # "Clean" target
 clean:

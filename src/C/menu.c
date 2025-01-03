@@ -24,241 +24,6 @@ u8 REW_rewindMenuEffect(struct MenuProc* menu, struct MenuCommandProc* menuItem)
   return ME_DISABLE | ME_END | ME_PLAY_BEEP | ME_CLEAR_GFX;
 }
 
-int REW_isUndoAvailable(struct REW_RewindSequence* sequence) {
-  if (!sequence->sizePrev)
-    return false;
-  return true;
-}
-
-int REW_isRedoAvailable(struct REW_RewindSequence* sequence) {
-  if (REW_rewindBuffer->end <= sequence)
-    return false;
-  return true;
-}
-
-void REW_undo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence) {
-  struct REW_RewindEntry* entry = REW_lastEntry(sequence);
-  Unit* unit = NULL;
-  int actor = false;
-  s8 xPost, yPost;
-  
-  // Loop backwards over all entries of given sequence.
-  while(entry != NULL) {
-  
-    switch(entry->diffType) {
-      
-      // Phase change.
-      case REW_ACTION_PHASECHANGE:
-        proc->flags |= REW_REFRESH_PHASE;
-        
-        // Set phase to phase prior to phase change.
-        gChapterData.currentPhase = (entry->flags & REW_PHASE_PRE_MASK) << 6;
-        
-        // Decrement turn counter.
-        if (entry->flags & REW_PHASECHANGE_TURNINCR) {
-          gChapterData.turnNumber--;
-          proc->flags |= REW_REFRESH_TURN;
-        }
-        
-        // Set relevant units to unavailable.
-        //for (int i = 0; i < entry->size - 3; i++) {
-          //unit = GetUnit(phaseChangeData->unitIDs[i]);
-          
-          //if (UNIT_IS_VALID(unit))
-            //unit->state |= US_UNSELECTABLE;
-        //}
-        break;
-      
-      // Breaking an obstacle.
-      case REW_ACTION_BREAK:
-        ;
-        Trap* trapData = (Trap*)entry->data;
-        Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
-        
-        if (trap != NULL) {
-          
-          // Obstacle was not destroyed.
-          // Update HP.
-          trap->data[0] -= trapData->data[0];
-        } else {
-          
-          // Obstacle was destroyed.
-          // Undo map change.
-          int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
-          UntriggerMapChange(mapChangeID, 0, NULL);
-          
-          // Add obstacle back as trap.
-          AddTrap(trapData->xPosition, trapData->yPosition, trapData->type, 0 - trapData->data[0]);
-        }
-        break;
-      
-      // Generic unit changes.
-      case REW_CONSEQ_UNITCHANGE:
-      
-      // Combat.
-      case UNIT_ACTION_COMBAT:
-        unit = GetUnit(entry->flags);     // TODO this doesn't work if unit died.
-        struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
-        
-        // Ignore if we can't find unit.
-        if (!UNIT_IS_VALID(unit))
-          continue;
-        
-        xPost = unit->xPos;
-        yPost = unit->yPos;
-        
-        // Undo changes applied to unit due to combat.
-        // TODO interpret x and y as absolute vals if unit died.
-        for (int i = 0; i < ((entry->size - REW_ENTRY_BASESIZE) / 2); i++) {
-          
-          if (unitChangeData[i].offs < REW_UNITSIZE) {
-            
-            // Undo generic changes applied to unit due to combat.
-            *(u8*)((u32)unit + unitChangeData[i].offs) -= unitChangeData[i].diff;
-          
-          } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
-            
-            // Undo BWL-data change.
-            ((u8*)BWL_GetEntry(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] -= unitChangeData[i].diff;
-          
-          } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
-            
-            // Undo/Incr. ballista uses.
-            GetTrap(unit->ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES] -= unitChangeData[i].diff;
-            
-          }
-          
-        }
-        
-        // Move unit back to their position before they entered combat.
-        // TODO, if unit died...
-        gMapUnit[yPost][xPost] = 0;
-        gMapUnit[unit->yPos][unit->xPos] = unit->index;
-        
-        // If actor, mark unit as available.
-        if (actor) {
-          unit->state &= ~(US_UNSELECTABLE | US_HAS_MOVED);
-        } else {
-          actor = true;
-        }
-      
-      default:
-        break;
-    }
-    entry = REW_prevEntry(sequence, entry);
-  }
-}
-
-void REW_redo(struct REW_ProcState* proc, struct REW_RewindSequence* sequence) {
-  struct REW_RewindEntry* entry = sequence->entry;
-  u32 end = (u32)REW_nextSequence(sequence);
-  Unit* unit = NULL;
-  int actor = true;
-  s8 xPrev, yPrev;
-  
-  // Loop over all entries of given sequence.
-  while((u32)entry < end) {
-    
-    switch(entry->diffType) {
-      
-      // Phase change.
-      case REW_ACTION_PHASECHANGE:
-        proc->flags |= REW_REFRESH_PHASE;
-        
-        // Set phase to phase after phase change.
-        gChapterData.currentPhase = (entry->flags & REW_PHASE_POST_MASK) << 4;
-        
-        // Increment turn counter.
-        if (entry->flags & REW_PHASECHANGE_TURNINCR) {
-          gChapterData.turnNumber++;
-          proc->flags |= REW_REFRESH_TURN;
-        }
-        
-        // Set relevant units to available.
-        //for (int i = 0; i < phaseChangeData->size - 3; i++) {
-          //unit = GetUnit(phaseChangeData->unitIDs[i]);
-          
-          //if (UNIT_IS_VALID(unit))
-            //unit->state &= ~US_UNSELECTABLE;
-        //}
-        break;
-      
-      // Breaking an obstacle.
-      case REW_ACTION_BREAK:
-        ;
-        Trap* trapData = (Trap*)entry->data;
-        Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
-        
-        // Update obstacle HP.
-        trap->data[0] += trapData->data[0];
-        
-        if (trap->data[0] == 0) {
-          
-          // Obstacle was destroyed.
-          // Remove obstacle.
-          RemoveTrap(trap);
-          
-          // Redo map change.
-          int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
-          TriggerMapChanges(mapChangeID, 0, NULL);
-        }
-        break;
-      
-      // Generic unit changes.
-      case REW_CONSEQ_UNITCHANGE:
-      
-      // Combat.
-      case UNIT_ACTION_COMBAT:
-        unit = GetUnit(entry->flags);
-        struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
-        
-        // Ignore if we can't find unit.
-        if (!UNIT_IS_VALID(unit))
-          continue;
-        
-        xPrev = unit->xPos;
-        yPrev = unit->yPos;
-        
-        // Redo changes applied to unit due to combat.
-        // TODO interpret x and y as absolute vals if unit died.
-        for (int i = 0; i < ((entry->size - REW_ENTRY_BASESIZE) / 2); i++) {
-          
-          if (unitChangeData[i].offs < REW_UNITSIZE) {
-            
-            // Redo generic changes applied to unit due to combat.
-            *(u8*)((u32)unit + unitChangeData[i].offs) += unitChangeData[i].diff;
-            
-          } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
-            
-            // Redo BWL-data change.
-            ((u8*)BWL_GetEntry(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] += unitChangeData[i].diff;
-          
-          } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
-            
-            // Redo/Decr. ballista uses.
-            GetTrap(unit->ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES] += unitChangeData[i].diff;
-            
-          }
-        }
-        
-        // Move unit back to their position after they finished combat.
-        // TODO, clear unit if they died.
-        gMapUnit[yPrev][xPrev] = 0;
-        gMapUnit[unit->yPos][unit->xPos] = unit->index;
-        
-        // If actor, mark unit as unavailable.
-        if (actor) {
-          unit->state |= US_UNSELECTABLE;
-          actor = false;
-        }
-      
-      default:
-        break;
-    }
-    entry = REW_nextEntry(entry);
-  }
-}
-
 const struct ProcInstruction REW_procScr[] = {
   PROC_SET_NAME("REW_proc"),
   PROC_YIELD,
@@ -526,13 +291,22 @@ void REW_refreshUI(struct REW_ProcState* proc) {
 
 // Wait for key-input.
 void REW_handleInput(struct REW_ProcState* proc) {
+  int phase = gChapterData.currentPhase;
+  int turn = gChapterData.turnNumber;
   
   // Up-press: rewind/undo action.
   if ((gKeyState.repeatedKeys & KEY_DPAD_UP) && (proc->flags & REW_UNDO_AVAILABLE)) {
     PlaySfx(0x66);
     
     // Undo action.
-    REW_undo(proc, proc->curSequence);
+    REW_undo(proc->curSequence);
+    
+    // Update flags tracking if phase or turn display
+    // needs to refresh.
+    if (phase != gChapterData.currentPhase)
+      proc->flags |= REW_REFRESH_PHASE;
+    if (turn != gChapterData.turnNumber)
+      proc->flags |= REW_REFRESH_TURN;
     
     // Set previous sequence as current sequence.
     proc->curSequence = REW_prevSequence(proc->curSequence);
@@ -554,7 +328,14 @@ void REW_handleInput(struct REW_ProcState* proc) {
     proc->curSequence = REW_nextSequence(proc->curSequence);
     
     // Redo action.
-    REW_redo(proc, proc->curSequence);
+    REW_redo(proc->curSequence);
+    
+    // Update flags tracking if phase or turn display
+    // needs to refresh.
+    if (phase != gChapterData.currentPhase)
+      proc->flags |= REW_REFRESH_PHASE;
+    if (turn != gChapterData.turnNumber)
+      proc->flags |= REW_REFRESH_TURN;
     
     // Update flags tracking if another redo is available.
     if (!REW_isRedoAvailable(proc->curSequence)) { proc->flags &= ~REW_REDO_AVAILABLE; }
@@ -588,20 +369,4 @@ void REW_procEnd(struct REW_ProcState* proc) {
   
   ClearBG0BG1();
   UnlockGameLogic();
-}
-
-// Need to hide units again if we:
-//  - undo a de-roofing.
-//  - redo a roofing.
-void REW_hideRoofedUnits() {
-
-  for (int i = 1; i < 0xC0; i++) {
-    Unit* unit = GetUnit(i);
-    if (!UNIT_IS_VALID(unit))
-      continue;
-    
-    if (gMapTerrain[unit->yPos][unit->xPos] == REW_ROOF_ID) {
-      unit->state |= US_UNDER_A_ROOF | US_HIDDEN;
-    }
-  }
 }

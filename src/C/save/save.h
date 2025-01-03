@@ -1,10 +1,20 @@
 #ifndef SAVE_H
 #define SAVE_H
 #include "gbafe.h"
+#include "../internal.h"
 
-// Vanilla
-void CpPhase_Init(Proc* proc);                // 0x80396AD
-void SaveSuspendedGame(int saveBlockId);      // 0x80A5A49
+// Custom.
+void* REW_findCurSequence();
+void REW_clearCurSequence();
+void* REW_findRewindBuf();
+void REW_clearRewindBuf();
+void REW_cpPhaseChangeSave(Proc* proc);
+void REW_loadActiveUnitMoveOrigin(void* src, u32 size);
+void REW_saveActiveUnitMoveOrigin(void* dest, u32 size);
+void REW_loadCurSequence(void* src, u32 size);
+void REW_saveCurSequence(void* dest, u32 size);
+void REW_loadRewind(void* src, u32 size);
+void REW_saveRewind(void* dest, u32 size);
 
 // EMS.
 struct SaveChunkDecl {
@@ -21,17 +31,8 @@ extern const u16* EMS_CHUNK_REWIND_SEQ;
 extern const u16* EMS_CHUNK_REWIND_BUF;
 extern const u16  gSaveBlockDecl[];
 
-// Custom.
-void* REW_findCurSequence();
-void REW_clearCurSequence();
-void* REW_findRewindBuf();
-void REW_clearRewindBuf();
-void REW_cpPhaseChangeSave(Proc* proc);
-void REW_loadActiveUnitMoveOrigin(void* src, u32 size);
-void REW_saveActiveUnitMoveOrigin(void* dest, u32 size);
-void REW_loadCurSequence(void* src, u32 size);
-void REW_saveCurSequence(void* dest, u32 size);
-void REW_loadRewind(void* src, u32 size);
-void REW_saveRewind(void* dest, u32 size);
+// Vanilla.
+void CpPhase_Init(Proc* proc);                // 0x80396AD
+void SaveSuspendedGame(int saveBlockId);      // 0x80A5A49
 
 #endif // SAVE_H

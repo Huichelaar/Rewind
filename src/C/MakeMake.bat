@@ -2,6 +2,6 @@
 
 make clean
 
-make all
+make main
 
 pause
