@@ -13,7 +13,7 @@ POIN 0x0 0x0 0x0 0x0 0x0 0x0
 POIN BeginningScene EndingScene
 
 ALIGN 4; TurnBasedEvents:
-//TurnEventEnemy(8,debugSceneTurn1,1)
+TurnEventEnemy(8,debugSceneTurn1,1)
 END_MAIN
 
 ALIGN 4; CharacterBasedEvents:
@@ -70,6 +70,7 @@ UNIT
 
 ALIGN 4; EnemyReinf1:
 UNIT 0x82 Gwyllgi 0x0 Level(10,Enemy,1) [0,0] 0b 0x0 0x4 EnemyReinf1Reda1 [0xB2,0x0,0x0,0x0] [0x0,0xA,0x0,0x0]
+UNIT 0x82 Mogall 0x0 Level(10,Enemy,1) [0,0] 0b 0x0 0x2 EnemyReinf1Reda2 [0xB3,0x0,0x0,0x0] [0x0,0xA,0x0,0x0]
 UNIT
 
 ALIGN 4; EnemyReinf1Reda1:
@@ -78,6 +79,9 @@ REDA [3, 3] 0 0 0 0
 REDA [3, 1] 0 0 0 0
 REDA [6, 1] 0 0 0 0
 
+ALIGN 4; EnemyReinf1Reda2:
+REDA [3, 0] 0 0 0 0
+REDA [3, 1] 0 0 0 0
 
 ALIGN 4; BeginningScene:
 LOAD1 1 PlayerUnits

@@ -109,9 +109,9 @@ void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewin
   }
 }
 
-void REW_displayCombatVerb(struct REW_RewindEntry* entry, TextHandle* sequenceDesc) {
+void REW_displayCombatVerb(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry, TextHandle* sequenceDesc) {
   u16 textID = TEXTID(REW_combat);
-  struct REW_RewindEntry* nextEntry = REW_nextEntry(entry);
+  struct REW_RewindEntry* nextEntry = REW_nextEntry(seq, entry);
   
   if (nextEntry->diffType == REW_ACTION_BREAK) {
     Trap* trap = (Trap*)nextEntry->data;
@@ -257,8 +257,8 @@ void REW_refreshUI(struct REW_ProcState* proc) {
         actionNotFound = false;
         
         REW_displayActor(proc, rewindEntry, sequenceDesc);
-        REW_displayCombatVerb(rewindEntry, sequenceDesc);
-        REW_displayTarget(proc, REW_nextEntry(rewindEntry), sequenceDesc);
+        REW_displayCombatVerb(proc->curSequence, rewindEntry, sequenceDesc);
+        REW_displayTarget(proc, REW_nextEntry(proc->curSequence, rewindEntry), sequenceDesc);
         Text_DrawChar(sequenceDesc, ".");                                      // Period.
         Text_Display(sequenceDesc, TILEMAP_LOCATED(gBg0MapBuffer, 5, 2));
         break;
@@ -283,7 +283,7 @@ void REW_refreshUI(struct REW_ProcState* proc) {
         }
         break;
       default:
-        rewindEntry = REW_nextEntry(rewindEntry);
+        rewindEntry = REW_nextEntry(proc->curSequence, rewindEntry);
     }
   }
   EnableBgSyncByIndex(0);
@@ -318,7 +318,8 @@ void REW_handleInput(struct REW_ProcState* proc) {
     // Draw previous sequence.
     REW_refreshUI(proc);
     
-    // Refresh standing map sprites.
+    // Refresh units.
+    RefreshEntityBmMaps();
     SMS_UpdateFromGameData();
   } // Down-press: redo action.
   else if ((gKeyState.repeatedKeys & KEY_DPAD_DOWN) && (proc->flags & REW_REDO_AVAILABLE)) {
@@ -344,7 +345,8 @@ void REW_handleInput(struct REW_ProcState* proc) {
     // Draw next sequence.
     REW_refreshUI(proc);
     
-    // Refresh standing map sprites.
+    // Refresh units.
+    RefreshEntityBmMaps();
     SMS_UpdateFromGameData();
   }
   // TODO other buttons.

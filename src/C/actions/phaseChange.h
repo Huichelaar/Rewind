@@ -3,8 +3,16 @@
 #include "gbafe.h"
 #include "../internal.h"
 
+void REW_undoPhaseChange(struct REW_RewindEntry* entry);
+void REW_redoPhaseChange(struct REW_RewindEntry* entry);
+
 u8 REW_nextPhase(u8 phase, u8* turn, u8* skip);
-void REW_actionPrePhaseChange();
-void REW_actionPostPhaseChange();
+void REW_actionPhaseChangeStart();
+void REW_actionPhaseChangeSuppports();
+void REW_actionPhaseChangeTrackStatus();
+void REW_actionPhaseChangeRecordStatus();
+
+// Vanilla
+void TickActiveFactionTurn();   // 0x8018858
 
 #endif // PHASECHANGE_H

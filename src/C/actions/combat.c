@@ -1,6 +1,126 @@
 #include <stdio.h>
 #include "combat.h"
 
+// Undo combat where target is obstacle (snag or wall).
+void REW_undoObstacleCombat(struct REW_RewindEntry* entry) {
+  Trap* trapData = (Trap*)entry->data;
+  Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
+  
+  if (trap != NULL) {
+    
+    // Obstacle was not destroyed.
+    // Update HP.
+    trap->data[0] -= trapData->data[0];
+  } else {
+    
+    // Obstacle was destroyed.
+    // Undo map change.
+    int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
+    UntriggerMapChange(mapChangeID, 0, NULL);
+    
+    // Add obstacle back as trap.
+    AddTrap(trapData->xPosition, trapData->yPosition, trapData->type, 0 - trapData->data[0]);
+  }
+}
+
+// Redo combat where target is obstacle (snag or wall).
+void REW_redoObstacleCombat(struct REW_RewindEntry* entry) {
+  Trap* trapData = (Trap*)entry->data;
+  Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
+  
+  // Update obstacle HP.
+  trap->data[0] += trapData->data[0];
+  
+  if (trap->data[0] == 0) {
+    
+    // Obstacle was destroyed.
+    // Remove obstacle.
+    RemoveTrap(trap);
+    
+    // Redo map change.
+    int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
+    TriggerMapChanges(mapChangeID, 0, NULL);
+  }
+}
+
+// Undo generic combat action.
+void REW_undoCombat(struct REW_RewindEntry* entry) {
+  Unit* unit = GetUnit(entry->flags);     // TODO this doesn't work if unit died.
+  struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
+  
+  // Ignore if we can't find unit.
+  if (!UNIT_IS_VALID(unit))
+    return;
+  
+  s8 xPost = unit->xPos;
+  s8 yPost = unit->yPos;
+  
+  // Undo changes applied to unit due to combat.
+  // TODO interpret x and y as absolute vals if unit died.
+  for (int i = 0; i < ((entry->size - REW_ENTRY_BASESIZE) / 2); i++) {
+    
+    if (unitChangeData[i].offs < REW_UNITSIZE) {
+      
+      // Undo generic changes applied to unit due to combat.
+      *(u8*)((u32)unit + unitChangeData[i].offs) -= unitChangeData[i].diff;
+    
+    } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
+      
+      // Undo BWL-data change.
+      ((u8*)BWL_GetEntry(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] -= unitChangeData[i].diff;
+    
+    } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
+      
+      // Undo/Incr. ballista uses.
+      GetTrap(unit->ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES] -= unitChangeData[i].diff;
+    }
+  }
+  
+  // Move unit back to their position before they entered combat.
+  // TODO, if unit died...
+  gMapUnit[yPost][xPost] = 0;
+  gMapUnit[unit->yPos][unit->xPos] = unit->index;
+}
+
+// Redo generic combat action.
+void REW_redoCombat(struct REW_RewindEntry* entry) {
+  Unit* unit = GetUnit(entry->flags);
+  struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
+  
+  // Ignore if we can't find unit.
+  if (!UNIT_IS_VALID(unit))
+    return;
+  
+  s8 xPrev = unit->xPos;
+  s8 yPrev = unit->yPos;
+  
+  // Redo changes applied to unit due to combat.
+  // TODO interpret x and y as absolute vals if unit died.
+  for (int i = 0; i < ((entry->size - REW_ENTRY_BASESIZE) / 2); i++) {
+    
+    if (unitChangeData[i].offs < REW_UNITSIZE) {
+      
+      // Redo generic changes applied to unit due to combat.
+      *(u8*)((u32)unit + unitChangeData[i].offs) += unitChangeData[i].diff;
+      
+    } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
+      
+      // Redo BWL-data change.
+      ((u8*)BWL_GetEntry(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] += unitChangeData[i].diff;
+    
+    } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
+      
+      // Redo/Decr. ballista uses.
+      GetTrap(unit->ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES] += unitChangeData[i].diff;
+    }
+  }
+  
+  // Move unit back to their position after they finished combat.
+  // TODO, clear unit if they died.
+  gMapUnit[yPrev][xPrev] = 0;
+  gMapUnit[unit->yPos][unit->xPos] = unit->index;
+}
+
 // Store unit's changes resulting from combat.
 // REW_RewindEntry.data[] is an
 // array of byte-pairs of the form:

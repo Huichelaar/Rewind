@@ -17,7 +17,7 @@ void* REW_findCurSequence() {
 void REW_clearCurSequence() {
   REW_curSequence->sizePrev = 0;
   REW_curSequence->size = 0;
-  WriteAndVerifySramFast(&REW_curSequence, REW_findCurSequence(), 4);
+  WriteAndVerifySramFast(REW_curSequence, REW_findCurSequence(), 4);
 }
 
 // Find address of rewindBuffer in save data.
@@ -79,19 +79,18 @@ void REW_saveActiveUnitMoveOrigin(void* dest, u32 size) {
 }
 
 // Load sequence from save to REW_curSequence.
-// TODO, remove this if it seems superfluous.
-// Atm, this gets called when loading from suspend and nowhere else.
 void REW_loadCurSequence(void* src, u32 size) {
   ReadSramFast(src, (void*)REW_curSequence, size);
 }
 
-// Save partial actions during partial action suspend.
+// Save partial actions and phase change sequences.
 // Partial action saves happen for example when the
 // game suspend-saves when a battle happens, before the battle ends.
 // We need to save the data in the REW_curSequence buffer.
 void REW_saveCurSequence(void* dest, u32 size) {
   
-  if (gActionData.suspendPointType != SUSPEND_POINT_DURINGACTION)
+  if (gActionData.suspendPointType != SUSPEND_POINT_DURINGACTION &&
+      gActionData.suspendPointType != SUSPEND_POINT_PHASECHANGE)
     return;
   
   WriteAndVerifySramFast((void*)REW_curSequence, dest, size);
@@ -144,5 +143,6 @@ void REW_saveRewind(void* dest, u32 size) {
   WriteAndVerifySramFast((void*)REW_rewindBuffer, dest, size);
   
   // Clear current rewind sequence to avoid writing it again.
-  REW_clearRewindSeq(REW_curSequence);
+  REW_clearRewindSeq(REW_curSequence);    // RAM
+  REW_clearCurSequence();                 // SRAM
 }

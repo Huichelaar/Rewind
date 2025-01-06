@@ -13,6 +13,7 @@ POIN 0x0 0x0 0x0 0x0 0x0 0x0
 POIN BeginningScene EndingScene
 
 ALIGN 4; TurnBasedEvents:
+TurnEventEnemy(8,EndingScene,1)
 END_MAIN
 
 ALIGN 4; CharacterBasedEvents:

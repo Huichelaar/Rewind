@@ -8,10 +8,6 @@ void REW_undo(struct REW_RewindSequence* sequence);
 void REW_redo(struct REW_RewindSequence* sequence);
 
 // Vanilla.
-const extern void TriggerMapChanges(u16 id, s8 flag, Proc* parent);  // 0x800BAF8
-const extern void UntriggerMapChange(u16 id, s8 flag, Proc* parent);  // 0x800BB48
-extern int GetMapChangesIdAt(int x, int y);  // 0x802E531
-
 #pragma pack(1)
 // ^ This solves an issue with alignment.
 // Idk why exactly, but I got it from here:

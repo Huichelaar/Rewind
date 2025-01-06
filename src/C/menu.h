@@ -43,7 +43,7 @@ void REW_initProc(struct REW_ProcState* proc);
 void REW_handleInput(struct REW_ProcState* proc);
 void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc);
 void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc);
-void REW_displayCombatVerb(struct REW_RewindEntry* entry, TextHandle* sequenceDesc);
+void REW_displayCombatVerb(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry, TextHandle* sequenceDesc);
 void REW_initUI(struct REW_ProcState* proc);
 void REW_refreshUI(struct REW_ProcState* proc);
 void REW_procEnd(struct REW_ProcState* proc);

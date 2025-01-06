@@ -1,3 +1,5 @@
+#define REW_DEBUG_ch0Map1
+
 // Various changes to help test stuff.
 #define REW_DEBUG_status_poison 1
 #define REW_DEBUG_status_sleep 2
@@ -22,45 +24,69 @@ PUSH
   ORG 0x8B08BC
   BYTE 17
   
-  // Tile anims.
-  ORG 0x8B0899
-  //BYTE 0x5
-  BYTE 0x0
-  
-  // Object map.
-  ORG 0x8B3640
-  //POIN 0x198D8C
-  POIN 0x1816B8
-  
-  // Palette.
-  ORG 0x8B3644
-  //POIN 0x1AEBF0
-  POIN 0x1AE470
-  
-  // Tile config.
-  ORG 0x8B3648
-  //POIN 0x1AB69C
-  POIN 0x1A6604
-  
-  // Map.
-  ORG 0x8B364C
-  //POIN REW_DEBUG_map1
-  POIN REW_DEBUG_map2
-  
-  // Map changes.
-  ORG 0x8B3654
-  //POIN REW_DEBUG_map1Changes
-  POIN REW_DEBUG_map2Changes
-  
-  // Events.
-  ORG 0x8B3658
-  //POIN REW_DEBUG_event1
-  POIN REW_DEBUG_event2
+  #ifdef REW_DEBUG_ch0Map1
+    // Tile anims.
+    ORG 0x8B0899
+      BYTE 0x5
+
+    // Object map.
+    ORG 0x8B3640
+      POIN 0x198D8C
+    
+    // Palette.
+    ORG 0x8B3644
+      POIN 0x1AEBF0
+    
+    // Tile config.
+    ORG 0x8B3648
+      POIN 0x1AB69C
+    
+    // Map.
+    ORG 0x8B364C
+      POIN REW_DEBUG_map1
+    
+    // Map changes.
+    ORG 0x8B3654
+      POIN REW_DEBUG_map1Changes
+    
+    // Events.
+    ORG 0x8B3658
+      POIN REW_DEBUG_event1
+  #else
+    // Tile anims.
+    ORG 0x8B0899
+      BYTE 0x0
+    
+    // Object map.
+    ORG 0x8B3640
+      POIN 0x1816B8
+    
+    // Palette.
+    ORG 0x8B3644
+      POIN 0x1AE470
+    
+    // Tile config.
+    ORG 0x8B3648
+      POIN 0x1A6604
+    
+    // Map.
+    ORG 0x8B364C
+      POIN REW_DEBUG_map2
+    
+    // Map changes.
+    ORG 0x8B3654
+      POIN REW_DEBUG_map2Changes
+    
+    // Events.
+    ORG 0x8B3658
+      POIN REW_DEBUG_event2
+  #endif
   
   // Set prologue crew's defenses to max.
   ORG 0x803D74; BYTE 0x1F; ORG 0x803E10; BYTE 0x1F; ORG 0x803DDC; BYTE 0x1F
   ORG 0x803E10; BYTE 0x1F; ORG 0x803E44; BYTE 0x1F; ORG 0x803E78; BYTE 0x1F
   ORG 0x803EAC; BYTE 0x1F; ORG 0x803EE0; BYTE 0x1F; ORG 0x803F14; BYTE 0x1F
+  ORG 0x803F48; BYTE 0x1F
 
 POP
 

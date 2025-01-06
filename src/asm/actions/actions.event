@@ -9,16 +9,25 @@ PUSH
   
   // Run additional routines when changing phases.
   // These routine set up a phase change sequence in rewind buffer.
+  //    - Tracks greyed out units. Hooks before suspend at start of BmMain_ChangePhase.
   ORG 0x15410
-    jumpToHack(REW_hookPrePhaseChange)
-    // TODO, ClearActiveFactionGrayedStates actually does something with BWL data?
-    // Need to handle that as well. Can take advantage of this same hook.
-  ORG 0x15450
-    jumpToHack(REW_hookPostPhaseChange)
+    jumpToHack(REW_actionHookPhaseChangeStart)
+  //    - Tracks support exp gains. Replaces ProcessTurnSupportExp.
+  ORG 0x28434
+    jumpToHack(REW_actionPhaseChangeSuppports)
+  //    - Hooks after gProc_BMapMain label 9, sets up some data in RAM.
+  ORG 0x59A2A4
+    POIN REW_actionPhaseChangeTrackStatus | 1
+  //    - Hooks immediately before gProc_BMapMain label 5.
+  //      Compares data setup previously to current values and
+  //      adds differences to rewind data.
+  ORG 0x59A2D0
+    WORD 0x2
+    POIN REW_actionPhaseChangeRecordStatus | 1
 
 POP
 
 ALIGN 4; REW_actionHookCombat:
 #include "combat.lyn.event"
-ALIGN 4
+ALIGN 4; REW_actionHookPhaseChangeStart:
 #include "phaseChange.lyn.event"

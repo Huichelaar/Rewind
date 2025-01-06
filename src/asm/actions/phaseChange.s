@@ -1,15 +1,13 @@
+@ Runs immediately before phases are changed.
+@ Calls REW_actionPhaseChangeStart, which tracks
+@ greyed out units. Also inits phase change sequence.
+@ Hooked at 0x15410.
 .thumb
 
-@ Runs immediately before phases are changed.
-@ Calls REW_actionPrePhaseChange, which tracks
-@ units' values which may change due to phase change.
-@ Hooked at 0x15410.
-.global REW_hookPrePhaseChange
-REW_hookPrePhaseChange:
 push  {r14}
 
 @ Init phase change sequence in rewind buffer.
-ldr   r0, =REW_actionPrePhaseChange
+ldr   r0, =REW_actionPhaseChangeStart
 bl    GOTO_R0
 
 @ Vanilla, overwritten by hook.
@@ -23,29 +21,7 @@ ldr   r0, =0x801541B
 GOTO_R0:
 bx    r0
 
-
-@ In-between these two hooks units' values may change.
+@ After this hook, units' values may change, such as:
 @ Torch, barrier, status, HP due to poison or healtiles.
-
-
-@ Runs immediately after phases are changed.
-@ Calls REW_actionPostPhaseChange, which fills up
-@ phase change entry in rewind buffer.
-@ Hooked at 0x15450.
-.global REW_hookPostPhaseChange
-REW_hookPostPhaseChange:
-
-push  {r4, r14}
-mov   r4, r0
-
-@ Finalize phase change sequence in rewind buffer.
-ldr   r0, =REW_actionPostPhaseChange
-bl    GOTO_R0
-
-@ Vanilla, overwritten by hook.
-ldr   r0, =gChapterData
-ldrb  r0, [r0, #0xF]
-
-@ Return.
-ldr   r1, =0x8015459
-bx    r1
+@ REW_actionPhaseChangeRecordStatus will note these
+@ changes and add them to rewind data.

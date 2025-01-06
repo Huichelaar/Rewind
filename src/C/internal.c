@@ -31,7 +31,7 @@ struct REW_RewindSequence* REW_prevSequence(struct REW_RewindSequence* sequence)
 }
 
 // Given a rewind-entry, return the next entry of the sequence.
-struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* entry) {
+struct REW_RewindEntry* REW_nextEntry(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry) {
   u16 size = entry->size;
   int align = size & 3;
   
@@ -39,15 +39,18 @@ struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* entry) {
   // Entries are always word-aligned.
   if (align)
     size += 4 - align;
-   
-  // Add REW_ENTRY_BASESIZE to account for attributes other than variably-sized data.
-  return (struct REW_RewindEntry*)((u32)entry + size);
+  
+  // Return NULL if entry wouldn't be in sequence.
+  entry = (struct REW_RewindEntry*)((u32)entry + size);
+  if ((u32)entry >= (u32)seq + seq->size)
+    return NULL;
+  return entry;
 }
 
 // Given a rewind-sequence and an entry, find the preceding entry in this sequence.
 struct REW_RewindEntry* REW_prevEntry(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry) {
   struct REW_RewindEntry* prev = seq->entry;
-  struct REW_RewindEntry* cur = REW_nextEntry(prev);
+  struct REW_RewindEntry* cur = REW_nextEntry(seq, prev);
   
   // Return NULL if there is no previous entry.
   if (prev == entry)
@@ -56,7 +59,7 @@ struct REW_RewindEntry* REW_prevEntry(struct REW_RewindSequence* seq, struct REW
   // Find current entry.
   while (cur != entry) {
     prev = cur;
-    cur = REW_nextEntry(cur);
+    cur = REW_nextEntry(seq, cur);
   }
   
   // Return previous entry.
@@ -67,12 +70,11 @@ struct REW_RewindEntry* REW_prevEntry(struct REW_RewindSequence* seq, struct REW
 struct REW_RewindEntry* REW_lastEntry(struct REW_RewindSequence* seq) {
   struct REW_RewindEntry* prev = seq->entry;
   struct REW_RewindEntry* cur = seq->entry;
-  u32 nextSeq = (u32)REW_nextSequence(seq);
   
   // Find final entry.
-  while ((u32)cur < nextSeq) {
+  while (cur != NULL) {
     prev = cur;
-    cur = REW_nextEntry(cur);
+    cur = REW_nextEntry(seq, cur);
   }
   
   // Return final entry.

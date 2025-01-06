@@ -16,9 +16,16 @@ LYN := $ C:/devkitPro/lyn.exe
 INCLUDE_DIRS := C:/FE-CLib/include
 INCFLAGS     := $(foreach dir, $(INCLUDE_DIRS), -I "$(dir)")
 
-# setting up compilation flags
+# Setting up compilation flags.
+# We're using -O2 instead of -Os because of this missing library function:
+# __gnu_thumb1_case_uqi
+# being called when switch statements get 4 or more cases. Solution provided here:
+# https://discord.com/channels/144670830150811649/179027738454261760/993219676131835924
+# Here's another person working on a TI machine (calculator?) with the same problem:
+# https://e2e.ti.com/support/microcontrollers/arm-based-microcontrollers-group/arm-based-microcontrollers/f/arm-based-microcontrollers-forum/1367312/mspm0g3507-undefined-__gnu_thumb1_case_uhi-when-building-with-ti_arm_clang-and-linking-to-precombiled-library-built-with-gnu-toolchain
+# Answer also suggests switch statement optimisation being culpable.
 ARCH   := -mcpu=arm7tdmi -mthumb -mthumb-interwork
-CFLAGS := $(ARCH)$(INCFLAGS) -Wall -Os -mtune=arm7tdmi -mlong-calls
+CFLAGS := $(ARCH)$(INCFLAGS) -Wall -O2 -mtune=arm7tdmi -mlong-calls
 
 # lyn reference object
 LYNREF := C:/FE-CLib/reference/FE8U.o

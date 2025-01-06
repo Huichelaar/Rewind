@@ -41,6 +41,22 @@ PhaseChange: We start at gProc_BMapMain label 3
 phaseChange Rewind data. Check out decomp's SwitchPhases function:
 https://github.com/FireEmblemUniverse/fireemblem8u/blob/master/src/bm.c#L372
 
+### Rewind plan
+Hook at start of BmMain_ChangePhase, track in entry->flags:
+  - 2 bits for prePhase
+  - 2 bits for postPhase
+  - 1 bit for turnIncr
+  - 1 bit for skip phase.
+In data, track unitIDs of greyed out units.
+
+Hook in ProcessTurnSupportExp, add new unitchange rewindEntries for every unit whose support(s) change.
+
+turnbased events will add themselves to rewind sequence.
+
+Hook after gProc_BMapMain's proc label 9, tracking all new phase units' health, status, BWL (maybe not, too late for favoritism anyways), etc. (not supports anymore!) in the usual banim buffer. Because turnbased events already executed we no longer need to require scripted battles to not take place during turnbased events!
+
+Hook immediately before gProc_BMapMain's proc label 5. Maybe replace the call to 0x8015434 as this seems to be leftover unused tutorial stuff from FE7. Make the PROC_CALL_2 into PROC_CALL, the original PROC_CALL_2 never yields due to the function it calls always returning true. Add unitChange rewindentries for all units' whose HP, status, etc. was changed using data that was buffered in previous hook.
+
 ### Other relevant notes
 Basically phase order:
 blue -> red -> green -> repeat.
@@ -86,7 +102,9 @@ things that don't yet work and/or will not work:
   - phantom summon by summoners.
   - SPAWN_ALLY, SPAWN_NPC, SPAWN_ENEMY eventcodes. Shame but aren't planning to use these anyways.
   - BWL, only tracks Battles, Wins, Losses. Favoritism is too volatile, and Idc about the other stats either tbh. That said exp gained by combat is properly rewound at the moment. May change that.
+  - gPlaySt.chapterTotalSupportGain does not get reset when undoing moves. Maybe I'll change this if I end up caring enough about this data.
   - Dont run animated scripted battles during turnBasedEvents. One of these buffers (left OAMData, Framedata, right OAMData, Framedata) is used by phasechange to track unit changes during phases due to healtiles, poison, status decay etc.
   - Riding ballistae doesn't undo. I don't plan on having rideable ballistae.
   - Anything rescue-related (rescuing units, giving, taking, dropping (voluntarily or due to death). Don't plan on having rescue available either.
   - Traps. Don't overlay any trap over a cracked-wall trap. GetTrapAt may return the not-cracked-wall trap and that breaks the search for the cracked-wall trap. Only once wall has been destroyed can its tiles be occupied by a different trap.
+  - Unit loading requires every LOAD to be followed with an ENUN. As far as I'm aware vanilla does not require this, though it does abide by this. We now hard-require this. This is due to a hook in ENUN finalizing loaded units' final positions in rewind data. We can't know these positions when they're first loaded if they've got REDAs, due to the unit's final position changing if the final REDA tile is occupied.

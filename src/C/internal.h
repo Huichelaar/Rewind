@@ -7,6 +7,7 @@ enum {
   // Vanilla.
   // Sizes of structs.
   REW_UNITSIZE = 0x48,
+  REW_UNITDEFSIZE = 0x14,
   REW_BWLSIZE = 0x10,
   REW_TRAPSIZE = 0x8,
 
@@ -17,6 +18,7 @@ enum {
   
   // Other.
   REW_TRAP_MAX_COUNT = 64,
+  REW_MAX_SIMULTANEOUS_SUPPORT_COUNT = 5,
   
   // Entry & data sizes. Keep having to change these
   // so I made them into an enum.
@@ -26,12 +28,15 @@ enum {
   REW_ENTRY_PHASECHANGEDATA_BASESIZE = 0,
   REW_ENTRY_UNITCHANGEDATA_BASESIZE = 0,
   REW_ENTRY_OBSTACLE_BASESIZE = 4,
+  REW_PHASECHANGEBUFFER_ENTRYSIZE = 8,      // Preferably a power of 2.
   
   // diffTypes. First 0x3F values are reserved for actions,
   // such as UNIT_ACTION_COMBAT as given in FEClib's action.h.
-  REW_ACTION_PHASECHANGE =  0x40,
-  REW_CONSEQ_UNITCHANGE =   0x41,
-  REW_ACTION_BREAK = 0x42,
+  REW_ACTION_PHASECHANGE =    0x40,
+  REW_ACTION_BREAK =          0x41,
+  REW_CONSEQ_UNITCHANGE =     0x42,
+  REW_CONSEQ_UNITLOAD_INIT =  0x43,
+  REW_CONSEQ_UNITLOAD_FINAL = 0x44,
   
   // REW_RewindPhaseChangeData.flags.
   REW_PHASE_PRE_ALLY =    0x0,
@@ -88,7 +93,7 @@ void REW_clearRewindSeq(struct REW_RewindSequence* sequence);
 struct REW_RewindEntry* REW_createSeqEntry(struct REW_RewindSequence* seq);
 struct REW_RewindSequence* REW_nextSequence(struct REW_RewindSequence* sequence);
 struct REW_RewindSequence* REW_prevSequence(struct REW_RewindSequence* sequence);
-struct REW_RewindEntry* REW_nextEntry(struct REW_RewindEntry* entry);
+struct REW_RewindEntry* REW_nextEntry(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry);
 struct REW_RewindEntry* REW_prevEntry(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry);
 struct REW_RewindEntry* REW_lastEntry(struct REW_RewindSequence* seq);
 void REW_alignSequence(struct REW_RewindSequence* sequence);
