@@ -18,8 +18,8 @@ enum {
 };
 
 // Functions & structs.
-u8 REW_rewindMenuUsability(MenuCommandDefinition* command, u8 commandId);
-u8 REW_rewindMenuEffect(struct MenuProc* menu, struct MenuCommandProc* menuItem);
+u8 REW_rewindMenuUsability(struct MenuItemDef* command, u8 commandId);
+u8 REW_rewindMenuEffect(struct MenuProc* menu, struct MenuItemProc* menuItem);
 int REW_isUndoAvailable(struct REW_RewindSequence* sequence);
 int REW_isRedoAvailable(struct REW_RewindSequence* sequence);
 
@@ -28,47 +28,34 @@ struct REW_ProcState {
   /* 29 */ u8 flags;
 	/* 2A */ u8 pad2A[2];
   /* 2C */ struct REW_RewindSequence* curSequence;
-  /* 30 */ TextHandle sequenceDesc;
-  /* 38 */ TextHandle sequenceDescAlt;
-  /* 40 */ TextHandle turnNumberText;
-  /* 48 */ TextHandle turnNumberTextAlt;
-  /* 50 */ MoveUnitProc* muActor;
-  /* 54 */ MoveUnitProc* muTarget;
+  /* 30 */ struct Text sequenceDesc;
+  /* 38 */ struct Text sequenceDescAlt;
+  /* 40 */ struct Text turnNumberText;
+  /* 48 */ struct Text turnNumberTextAlt;
+  /* 50 */ struct MuProc* muActor;
+  /* 54 */ struct MuProc* muTarget;
   /* 58 */ struct APProc* phaseAPProc;
   /* 5C */ struct APProc* upArrowAPProc;
   /* 60 */ struct APProc* downArrowAPProc;
 };
-const ProcInstruction REW_procScr[];
+const struct ProcCmd REW_procScr[];
 void REW_initProc(struct REW_ProcState* proc);
 void REW_handleInput(struct REW_ProcState* proc);
-void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc);
-void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, TextHandle* sequenceDesc);
-void REW_displayCombatVerb(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry, TextHandle* sequenceDesc);
+void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, struct Text* sequenceDesc);
+void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, struct Text* sequenceDesc);
+void REW_displayCombatVerb(struct REW_RewindSequence* seq, struct REW_RewindEntry* entry, struct Text* sequenceDesc);
 void REW_initUI(struct REW_ProcState* proc);
 void REW_refreshUI(struct REW_ProcState* proc);
 void REW_procEnd(struct REW_ProcState* proc);
 
 // Data.
-const extern u16*  REW_rewindSize;                    // Size of rewindBuffer.
-const extern void* REW_menuTSA;                       // UI TSA.
-const extern void* REW_phaseAPDef;                    // Phase icon AP Definition.
-const extern void* REW_upArrowAPDef;                  // Up arrow AP Definition.
-const extern void* REW_downArrowAPDef;                // Down arrow AP Definition.
-const extern u16 REW_combat, REW_phaseIndicator,      // Text entries.
+extern const u16*  REW_rewindSize;                    // Size of rewindBuffer.
+extern const void* REW_menuTSA;                       // UI TSA.
+extern const void* REW_phaseAPDef;                    // Phase icon AP Definition.
+extern const void* REW_upArrowAPDef;                  // Up arrow AP Definition.
+extern const void* REW_downArrowAPDef;                // Down arrow AP Definition.
+extern const u16 REW_combat, REW_phaseIndicator,      // Text entries.
 REW_phaseBlue, REW_phaseRed, REW_phaseGreen,
 REW_obstacleDestroyed;
-
-// Vanilla.
-struct APProc {
-    /* 00 */ PROC_HEADER;
-    /* 29 */ u8 _pad[0x50-0x29];
-    /* 50 */ APHandle* pHandle;
-    /* 54 */ u32 xPosition;
-    /* 58 */ u32 yPosition;
-};
-
-const extern void UnpackUiVArrowGfx(int chr, int pal);  // 0x80B53BC
-const extern void triggerMapChanges(u16 id, s8 flag, Proc* parent);  // 0x800BAF8
-const extern void UntriggerMapChange(u16 id, s8 flag, Proc* parent);  // 0x800BB48
 
 #endif // MENU_H

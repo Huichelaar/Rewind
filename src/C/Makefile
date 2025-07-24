@@ -13,7 +13,7 @@ include $(DEVKITARM)/base_tools
 LYN := $ C:/devkitPro/lyn.exe
 
 # Setting C/ASM include directories up (there is none yet)
-INCLUDE_DIRS := C:/FE-CLib/include
+INCLUDE_DIRS := C:/FE-DecompLib/include
 INCFLAGS     := $(foreach dir, $(INCLUDE_DIRS), -I "$(dir)")
 
 # Setting up compilation flags.
@@ -28,7 +28,7 @@ ARCH   := -mcpu=arm7tdmi -mthumb -mthumb-interwork
 CFLAGS := $(ARCH)$(INCFLAGS) -Wall -O2 -mtune=arm7tdmi -mlong-calls
 
 # lyn reference object
-LYNREF := C:/FE-CLib/reference/FE8U.o
+LYNREF := C:/FE-DecompLib/reference/FE8UDecomp.o
 
 # listing files
 CFILEMAIN := main.c

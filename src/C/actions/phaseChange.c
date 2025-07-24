@@ -3,14 +3,14 @@
 
 // Undo phase change action.
 void REW_undoPhaseChange(struct REW_RewindEntry* entry) {
-  Unit* unit;
+  struct Unit* unit;
   
   // Set phase to phase prior to phase change.
-  gChapterData.currentPhase = (entry->flags & REW_PHASE_PRE_MASK) << 6;
+  gPlaySt.faction = (entry->flags & REW_PHASE_PRE_MASK) << 6;
   
   // Decrement turn counter.
   if (entry->flags & REW_PHASECHANGE_TURNINCR)
-    gChapterData.turnNumber--;
+    gPlaySt.chapterTurnNumber--;
   
   // Set relevant units to unavailable.
   for (int i = 0; i < entry->size - REW_ENTRY_BASESIZE; i++) {
@@ -23,14 +23,14 @@ void REW_undoPhaseChange(struct REW_RewindEntry* entry) {
 
 // Redo phase change action.
 void REW_redoPhaseChange(struct REW_RewindEntry* entry) {
-  Unit* unit;
+  struct Unit* unit;
   
   // Set phase to phase after phase change.
-  gChapterData.currentPhase = (entry->flags & REW_PHASE_POST_MASK) << 4;
+  gPlaySt.faction = (entry->flags & REW_PHASE_POST_MASK) << 4;
   
   // Increment turn counter.
   if (entry->flags & REW_PHASECHANGE_TURNINCR)
-    gChapterData.turnNumber++;
+    gPlaySt.chapterTurnNumber++;
   
   // Set relevant units to available.
   for (int i = 0; i < entry->size - REW_ENTRY_BASESIZE; i++) {
@@ -74,21 +74,21 @@ void REW_actionPhaseChangeStart() {
   struct REW_RewindEntry* entry;
   
   // Create new entry.
-  nextPhase = REW_nextPhase(gChapterData.currentPhase, &turnIncr, &skip);
+  nextPhase = REW_nextPhase(gPlaySt.faction, &turnIncr, &skip);
   entry = REW_createSeqEntry(REW_curSequence);
   entry->diffType = REW_ACTION_PHASECHANGE;
   entry->size = REW_ENTRY_BASESIZE + REW_ENTRY_PHASECHANGEDATA_BASESIZE;
   
   // Setup flags.
   entry->flags = 0;
-  entry->flags |= (gChapterData.currentPhase >> 6);
+  entry->flags |= (gPlaySt.faction >> 6);
   entry->flags |= (nextPhase >> 4);
   if (turnIncr) { entry->flags |= REW_PHASECHANGE_TURNINCR; }
   if (skip) { entry->flags |= REW_PHASECHANGE_SKIPPHASE; }
   
   // Track current phase unit if they performed action during their phase.
   for (unitID = 1; unitID < 0x40; unitID++) {
-    unitIDCurrFaction = unitID + gChapterData.currentPhase;
+    unitIDCurrFaction = unitID + gPlaySt.faction;
     
     // Track current phase unit if they performed action during their phase.
     unit = GetUnit(unitIDCurrFaction);
@@ -114,10 +114,10 @@ void REW_actionPhaseChangeSuppports() {
   struct REW_RewindEntry* entry;
   struct REW_UnitChangeData* unitChangeData;
 
-  if (gChapterData.turnNumber == 1)
+  if (gPlaySt.chapterTurnNumber == 1)
     return;
 
-  if (gChapterData.chapterStateBits & 0x80)   // PLAY_FLAG_EXTRA_MAP
+  if (gPlaySt.chapterStateBits & 0x80)   // PLAY_FLAG_EXTRA_MAP
     return;
 
   for (i = 1; i < 0x40; i++) {
@@ -137,9 +137,9 @@ void REW_actionPhaseChangeSuppports() {
     entry->size = REW_ENTRY_BASESIZE;
     unitChangeData = (struct REW_UnitChangeData*)entry->data;
     k = 0;
-    jMax = GetROMUnitSupportCount(unit);
+    jMax = GetUnitSupporterCount(unit);
     for (j = 0; j < jMax; j++) {
-      struct Unit* other = GetUnitSupportingUnit(unit, j);
+      struct Unit* other = GetUnitSupporterUnit(unit, j);
 
       if (!other)
         continue;
@@ -152,7 +152,7 @@ void REW_actionPhaseChangeSuppports() {
 
       switch (RECT_DISTANCE(unit->xPos, unit->yPos, other->xPos, other->yPos)) {
         case 0:
-          if (!(unit->rescueOtherUnit == other->index))
+          if (!(unit->rescue == other->index))
             continue;
           break;
 
@@ -198,14 +198,14 @@ void REW_actionPhaseChangeSuppports() {
 void REW_actionPhaseChangeTrackStatus() {
   u8* unit;
   struct Unit* unit2;
-  const int unitIDEnd = gChapterData.currentPhase + 0x40;
+  const int unitIDEnd = gPlaySt.faction + 0x40;
   u8* phaseChangeBuffer = (u8*)REW_rewindBuffer;    // Tracks all units' changes
   
   // Empty phaseChangeBuffer.
   CpuFastFill(0, phaseChangeBuffer, REW_PHASECHANGEBUFFER_ENTRYSIZE * 0x40);
   
   // Track unit stats that might change during phase change.
-  for (int unitID = gChapterData.currentPhase + 1; unitID < unitIDEnd; unitID++) {
+  for (int unitID = gPlaySt.faction + 1; unitID < unitIDEnd; unitID++) {
     unit2 = GetUnit(unitID);
     if (!UNIT_IS_VALID(unit2))
       continue;
@@ -242,11 +242,11 @@ void REW_actionPhaseChangeRecordStatus() {
   struct Unit* unit2;
   struct REW_RewindEntry* entry;
   struct REW_UnitChangeData* unitChangeData;
-  const int unitIDEnd = gChapterData.currentPhase + 0x40;
+  const int unitIDEnd = gPlaySt.faction + 0x40;
   u8* phaseChangeBuffer = (u8*)REW_rewindBuffer;    // Tracks all units' changes
   
   // Add changed unit stats to rewind data.
-  for (int unitID = gChapterData.currentPhase + 1; unitID < unitIDEnd; unitID++) {
+  for (int unitID = gPlaySt.faction + 1; unitID < unitIDEnd; unitID++) {
     unit2 = GetUnit(unitID);
     if (!UNIT_IS_VALID(unit2))
       continue;

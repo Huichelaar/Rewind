@@ -12,7 +12,4 @@ void REW_actionPhaseChangeSuppports();
 void REW_actionPhaseChangeTrackStatus();
 void REW_actionPhaseChangeRecordStatus();
 
-// Vanilla
-void TickActiveFactionTurn();   // 0x8018858
-
 #endif // PHASECHANGE_H

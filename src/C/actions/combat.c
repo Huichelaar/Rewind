@@ -3,49 +3,49 @@
 
 // Undo combat where target is obstacle (snag or wall).
 void REW_undoObstacleCombat(struct REW_RewindEntry* entry) {
-  Trap* trapData = (Trap*)entry->data;
-  Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
+  struct Trap* trapData = (struct Trap*)entry->data;
+  struct Trap* trap = GetTypedTrapAt(trapData->xPos, trapData->yPos, trapData->type);
   
   if (trap != NULL) {
     
     // Obstacle was not destroyed.
     // Update HP.
-    trap->data[0] -= trapData->data[0];
+    trap->extra -= trapData->extra;
   } else {
     
     // Obstacle was destroyed.
     // Undo map change.
-    int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
+    int mapChangeID = GetMapChangeIdAt(trapData->xPos, trapData->yPos);
     UntriggerMapChange(mapChangeID, 0, NULL);
     
     // Add obstacle back as trap.
-    AddTrap(trapData->xPosition, trapData->yPosition, trapData->type, 0 - trapData->data[0]);
+    AddTrap(trapData->xPos, trapData->yPos, trapData->type, 0 - trapData->extra);
   }
 }
 
 // Redo combat where target is obstacle (snag or wall).
 void REW_redoObstacleCombat(struct REW_RewindEntry* entry) {
-  Trap* trapData = (Trap*)entry->data;
-  Trap* trap = GetSpecificTrapAt(trapData->xPosition, trapData->yPosition, trapData->type);
+  struct Trap* trapData = (struct Trap*)entry->data;
+  struct Trap* trap = GetTypedTrapAt(trapData->xPos, trapData->yPos, trapData->type);
   
   // Update obstacle HP.
-  trap->data[0] += trapData->data[0];
+  trap->extra += trapData->extra;
   
-  if (trap->data[0] == 0) {
+  if (trap->extra == 0) {
     
     // Obstacle was destroyed.
     // Remove obstacle.
     RemoveTrap(trap);
     
     // Redo map change.
-    int mapChangeID = GetMapChangesIdAt(trapData->xPosition, trapData->yPosition);
+    int mapChangeID = GetMapChangeIdAt(trapData->xPos, trapData->yPos);
     TriggerMapChanges(mapChangeID, 0, NULL);
   }
 }
 
 // Undo generic combat action.
 void REW_undoCombat(struct REW_RewindEntry* entry) {
-  Unit* unit = GetUnit(entry->flags);     // TODO this doesn't work if unit died.
+  struct Unit* unit = GetUnit(entry->flags);     // TODO this doesn't work if unit died.
   struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
   
   // Ignore if we can't find unit.
@@ -67,7 +67,7 @@ void REW_undoCombat(struct REW_RewindEntry* entry) {
     } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
       
       // Undo BWL-data change.
-      ((u8*)BWL_GetEntry(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] -= unitChangeData[i].diff;
+      ((u8*)GetPidStats(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] -= unitChangeData[i].diff;
     
     } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
       
@@ -78,13 +78,13 @@ void REW_undoCombat(struct REW_RewindEntry* entry) {
   
   // Move unit back to their position before they entered combat.
   // TODO, if unit died...
-  gMapUnit[yPost][xPost] = 0;
-  gMapUnit[unit->yPos][unit->xPos] = unit->index;
+  gBmMapUnit[yPost][xPost] = 0;
+  gBmMapUnit[unit->yPos][unit->xPos] = unit->index;
 }
 
 // Redo generic combat action.
 void REW_redoCombat(struct REW_RewindEntry* entry) {
-  Unit* unit = GetUnit(entry->flags);
+  struct Unit* unit = GetUnit(entry->flags);
   struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
   
   // Ignore if we can't find unit.
@@ -106,7 +106,7 @@ void REW_redoCombat(struct REW_RewindEntry* entry) {
     } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
       
       // Redo BWL-data change.
-      ((u8*)BWL_GetEntry(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] += unitChangeData[i].diff;
+      ((u8*)GetPidStats(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] += unitChangeData[i].diff;
     
     } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
       
@@ -117,8 +117,8 @@ void REW_redoCombat(struct REW_RewindEntry* entry) {
   
   // Move unit back to their position after they finished combat.
   // TODO, clear unit if they died.
-  gMapUnit[yPrev][xPrev] = 0;
-  gMapUnit[unit->yPos][unit->xPos] = unit->index;
+  gBmMapUnit[yPrev][xPrev] = 0;
+  gBmMapUnit[unit->yPos][unit->xPos] = unit->index;
 }
 
 // Store unit's changes resulting from combat.
@@ -213,7 +213,7 @@ void REW_storeCombatData(struct Unit* unit,
   }
   
   //  - BWL changes.
-  bwlPre = BWL_GetEntry(unit->pCharacterData->number);
+  bwlPre = GetPidStats(unit->pCharacterData->number);
   if (bwlPre != NULL) {
     CpuCopy16(bwlPre, &bwlPost, REW_BWLSIZE);
     
@@ -317,22 +317,22 @@ void REW_actionCombat() {
     }
   } else  {
     // Obstacle.
-    Trap* trap = GetTrapAt(gBattleTarget.unit.xPos, gBattleTarget.unit.yPos);
+    struct Trap* trap = GetTrapAt(gBattleTarget.unit.xPos, gBattleTarget.unit.yPos);
     
     rewindEntry->diffType = REW_ACTION_BREAK;   // Snags & walls.
     rewindEntry->flags = 0;
     
     // If terrain is wall, do nothing, if snag, orr 1 with flags.
-    if (gMapTerrain[gBattleTarget.unit.yPos][gBattleTarget.unit.xPos] == REW_SNAG_ID)
+    if (gBmMapTerrain[gBattleTarget.unit.yPos][gBattleTarget.unit.xPos] == REW_SNAG_ID)
       rewindEntry->flags |= REW_OBSTACLE_SNAG;
     
     rewindEntry->size = REW_ENTRY_BASESIZE;
     
-    Trap* trapData = (Trap*)rewindEntry->data;
-    trapData->xPosition = trap->xPosition;
-    trapData->yPosition = trap->yPosition;
+    struct Trap* trapData = (struct Trap*)rewindEntry->data;
+    trapData->xPos = trap->xPos;
+    trapData->yPos = trap->yPos;
     trapData->type = trap->type;
-    trapData->data[0] = gBattleTarget.unit.curHP - trap->data[0];
+    trapData->extra = gBattleTarget.unit.curHP - trap->extra;
     
     rewindEntry->size += REW_ENTRY_OBSTACLE_BASESIZE;
     rewindSeq->size += rewindEntry->size;

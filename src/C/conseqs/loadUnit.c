@@ -3,7 +3,7 @@
 
 // Undo load unit consequence.
 void REW_undoLoadUnit(struct REW_RewindEntry* entry) {
-  Unit* unit = GetUnit(entry->flags);
+  struct Unit* unit = GetUnit(entry->flags);
   
   // If unit doesn't exist, ignore.
   if (!UNIT_IS_VALID(unit))
@@ -18,7 +18,7 @@ void REW_redoLoadUnit(struct REW_RewindEntry* entry) {
 }
 
 // Add loaded unit to rewind sequence.
-void REW_conseqInitUnit(Unit* unit, struct UnitDefinition* unitDef) {
+void REW_conseqInitUnit(struct Unit* unit, struct UnitDefinition* unitDef) {
   // Don't add consequence if sequence is empty.
   if (REW_curSequence->size == 0)
     return;
@@ -46,7 +46,7 @@ void REW_conseqInitUnit(Unit* unit, struct UnitDefinition* unitDef) {
 
 // Finalize loaded units' positions in rewind sequence.
 void REW_conseqFinalizeUnits() {
-  Unit* unit;
+  struct Unit* unit;
   struct UnitDefinition* unitDefData;
   struct REW_RewindEntry* entry = REW_curSequence->entry;
   

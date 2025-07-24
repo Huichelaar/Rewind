@@ -18,11 +18,5 @@ void REW_storeCombatData(struct Unit* unit,
                          struct REW_RewindEntry* rewindEntry);
 void REW_actionCombat();
 
-// Vanilla.
-const extern void TriggerMapChanges(u16 id, s8 flag, Proc* parent);   // 0x800BAF8
-const extern void UntriggerMapChange(u16 id, s8 flag, Proc* parent);  // 0x800BB48
-extern int GetBattleUnitUpdatedWeaponExp(struct BattleUnit* bu);      // 0x802C0B4
-extern int GetMapChangesIdAt(int x, int y);                           // 0x802E531
-
 
 #endif // COMBAT_H

@@ -4,8 +4,8 @@
 // Find address of current sequence in save data.
 void* REW_findCurSequence() {
 
-  //void* const source = GetSaveSourceAddress(SAVE_BLOCK_SUSPEND);  // Doesn't work when no active suspend.
-  void* const source = (void*)(0xE000000 + gSaveBlockDecl[SAVE_BLOCK_SUSPEND * 2]);
+  //void* const source = GetSaveSourceAddress(SAVE_ID_SUSPEND);  // Doesn't work when no active suspend.
+  void* const source = (void*)(0xE000000 + gSaveBlockDecl[SAVE_ID_SUSPEND * 2]);
   const struct SaveChunkDecl* chunk = MS_FindSuspendSaveChunk((u16)(u32)(&EMS_CHUNK_REWIND_SEQ));
   
   return (void*)(source + chunk->offset);
@@ -23,8 +23,8 @@ void REW_clearCurSequence() {
 // Find address of rewindBuffer in save data.
 void* REW_findRewindBuf() {
   
-  //void* const source = GetSaveSourceAddress(SAVE_BLOCK_SUSPEND);  // Doesn't work when no active suspend.
-  void* const source = (void*)(0xE000000 + gSaveBlockDecl[SAVE_BLOCK_SUSPEND * 2]);
+  //void* const source = GetSaveSourceAddress(SAVE_ID_SUSPEND);  // Doesn't work when no active suspend.
+  void* const source = (void*)(0xE000000 + gSaveBlockDecl[SAVE_ID_SUSPEND * 2]);
   const struct SaveChunkDecl* chunk = MS_FindSuspendSaveChunk((u16)(u32)(&EMS_CHUNK_REWIND_BUF));
   
   return (void*)(source + chunk->offset);
@@ -38,19 +38,19 @@ void REW_clearRewindBuf() {
 }
 
 // Save non-player phase changes.
-// Replaces proc call to CpPhase_Init at
-// 0x5A7F10, hence why we call CpPhase_Init.
-void REW_cpPhaseChangeSave(Proc* proc) {
+// Replaces proc call to AiPhaseInit at
+// 0x5A7F10, hence why we call AiPhaseInit.
+void REW_cpPhaseChangeSave(ProcPtr proc) {
   
   // Save only if phase is not skipped.
-  if (GetPhaseAbleUnitCount(gChapterData.currentPhase) > 0) {
+  if (GetPhaseAbleUnitCount(gPlaySt.faction) > 0) {
     gActionData.suspendPointType = SUSPEND_POINT_CPPHASE;
-    SaveSuspendedGame(SAVE_BLOCK_SUSPEND);
+    WriteSuspendSave(SAVE_ID_SUSPEND);
   }
   
   // This function call was overwritten by inline
   // insertion of the REW_cpPhaseChangeSave call
-  CpPhase_Init(proc);
+  AiPhaseInit(proc);
 }
 
 // Load active unit's position before acting.
@@ -133,7 +133,7 @@ void REW_saveRewind(void* dest, u32 size) {
   newSeq = (struct REW_RewindSequence*)((u32)REW_rewindBuffer + REW_rewindBuffer->size);
   newSeq->sizePrev = prevSeqSize;
   newSeq->size = REW_curSequence->size;
-  memcpy((void*)&newSeq->entry[0], (void*)&REW_curSequence->entry[0], REW_curSequence->size - REW_SEQUENCE_BASESIZE);
+  MemCpy((void*)&newSeq->entry[0], (void*)&REW_curSequence->entry[0], REW_curSequence->size - REW_SEQUENCE_BASESIZE);
   
   // Adjust REW_rewindBuffer params.
   REW_rewindBuffer->size += newSeq->size;

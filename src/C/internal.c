@@ -107,11 +107,11 @@ int REW_isRedoAvailable(struct REW_RewindSequence* sequence) {
 void REW_hideRoofedUnits() {
 
   for (int i = 1; i < 0xC0; i++) {
-    Unit* unit = GetUnit(i);
+    struct Unit* unit = GetUnit(i);
     if (!UNIT_IS_VALID(unit))
       continue;
     
-    if (gMapTerrain[unit->yPos][unit->xPos] == REW_ROOF_ID) {
+    if (gBmMapTerrain[unit->yPos][unit->xPos] == REW_ROOF_ID) {
       unit->state |= US_UNDER_A_ROOF | US_HIDDEN;
     }
   }

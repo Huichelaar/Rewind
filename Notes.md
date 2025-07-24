@@ -104,7 +104,7 @@ things that don't yet work and/or will not work:
   - BWL, only tracks Battles, Wins, Losses. Favoritism is too volatile, and Idc about the other stats either tbh. That said exp gained by combat is properly rewound at the moment. May change that.
   - gPlaySt.chapterTotalSupportGain does not get reset when undoing moves. Maybe I'll change this if I end up caring enough about this data.
   - Dont run animated scripted battles during turnBasedEvents. One of these buffers (left OAMData, Framedata, right OAMData, Framedata) is used by phasechange to track unit changes during phases due to healtiles, poison, status decay etc.
-  - Riding ballistae doesn't undo. I don't plan on having rideable ballistae.
-  - Anything rescue-related (rescuing units, giving, taking, dropping (voluntarily or due to death). Don't plan on having rescue available either.
+  - Riding ballistae doesn't undo yet.
+  - Anything rescue-related (rescuing units, giving, taking, dropping (voluntarily or due to death) doesn't undo yet.
   - Traps. Don't overlay any trap over a cracked-wall trap. GetTrapAt may return the not-cracked-wall trap and that breaks the search for the cracked-wall trap. Only once wall has been destroyed can its tiles be occupied by a different trap.
   - Unit loading requires every LOAD to be followed with an ENUN. As far as I'm aware vanilla does not require this, though it does abide by this. We now hard-require this. This is due to a hook in ENUN finalizing loaded units' final positions in rewind data. We can't know these positions when they're first loaded if they've got REDAs, due to the unit's final position changing if the final REDA tile is occupied.
