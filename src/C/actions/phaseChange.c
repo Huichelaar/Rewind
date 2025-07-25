@@ -89,8 +89,6 @@ void REW_actionPhaseChangeStart() {
   // Track current phase unit if they performed action during their phase.
   for (unitID = 1; unitID < 0x40; unitID++) {
     unitIDCurrFaction = unitID + gPlaySt.faction;
-    
-    // Track current phase unit if they performed action during their phase.
     unit = GetUnit(unitIDCurrFaction);
     if (UNIT_IS_VALID(unit)) {
       if (unit->state & US_UNSELECTABLE) {
@@ -194,7 +192,7 @@ void REW_actionPhaseChangeSuppports() {
 //  - Status (unit can recover from status),
 //  - HP (unit can lose health due to poison,
 //        or gain health due to healtile),
-// Doesn't track BWL Favoritism.
+// Doesn't track BWL Favoritism. TODO
 void REW_actionPhaseChangeTrackStatus() {
   u8* unit;
   struct Unit* unit2;
@@ -225,7 +223,7 @@ void REW_actionPhaseChangeTrackStatus() {
     phaseChangeBuffer[unitID * REW_PHASECHANGEBUFFER_ENTRYSIZE + 6] = 0xB;
     phaseChangeBuffer[unitID * REW_PHASECHANGEBUFFER_ENTRYSIZE + 7] = unit[0xB];
     
-    // We don't track BWL-favoritism.
+    // We don't track BWL-favoritism. TODO
   }
   
   // Call to REW_actionPhaseChangeTrackStatus replaced

@@ -13,7 +13,7 @@ bl    GOTO_R0
 @ Vanilla, overwritten by hook.
 ldr   r0, =ClearActiveFactionGrayedStates
 bl    GOTO_R0
-ldr   r0, =SMS_UpdateFromGameData
+ldr   r0, =RefreshUnitSprites
 bl    GOTO_R0
 
 @ Return.

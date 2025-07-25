@@ -1,2 +1,2 @@
 @ Definitions
-.include "C:/FE-CLib/reference/FE8U.s"
+.include "C:/FE-DecompLib/reference/FE8UDecompCam.s"

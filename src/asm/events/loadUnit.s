@@ -42,7 +42,7 @@ bl    REW_conseqFinalizeUnits
 @ Vanilla, overwritten by hook.
 ldr   r3, =RefreshEntityBmMaps
 bl    GOTO_R3
-ldr   r3, =SMS_UpdateFromGameData
+ldr   r3, =RefreshUnitSprites
 bl    GOTO_R3
 ldr   r3, =RenderBmMap
 bl    GOTO_R3

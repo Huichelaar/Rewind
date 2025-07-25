@@ -17,7 +17,7 @@ Current limitations of rewind are written in the last subsection. Will add to th
 Notes w.r.t. phase change.
 
 ### Main proc structure
-https://github.com/FireEmblemUniverse/fireemblem8u/blob/master/src/bm.c#L69
+https://github.com/FireEmblemUniverse/fireemblem8u/blob/master/src/bm.c#L72
 PhaseChange: We start at gProc_BMapMain label 3
   PROC_CALL_2(BmMain_ChangePhase),
     SwitchPhases()
@@ -39,7 +39,7 @@ PhaseChange: We start at gProc_BMapMain label 3
   PROC_START_CHILD_BLOCKING(gProcScr_GorgonEggHatchDisplay),
 
 phaseChange Rewind data. Check out decomp's SwitchPhases function:
-https://github.com/FireEmblemUniverse/fireemblem8u/blob/master/src/bm.c#L372
+https://github.com/FireEmblemUniverse/fireemblem8u/blob/master/src/bm.c#L375
 
 ### Rewind plan
 Hook at start of BmMain_ChangePhase, track in entry->flags:
@@ -56,6 +56,8 @@ turnbased events will add themselves to rewind sequence.
 Hook after gProc_BMapMain's proc label 9, tracking all new phase units' health, status, BWL (maybe not, too late for favoritism anyways), etc. (not supports anymore!) in the usual banim buffer. Because turnbased events already executed we no longer need to require scripted battles to not take place during turnbased events!
 
 Hook immediately before gProc_BMapMain's proc label 5. Maybe replace the call to 0x8015434 as this seems to be leftover unused tutorial stuff from FE7. Make the PROC_CALL_2 into PROC_CALL, the original PROC_CALL_2 never yields due to the function it calls always returning true. Add unitChange rewindentries for all units' whose HP, status, etc. was changed using data that was buffered in previous hook.
+
+Note to future self: this plan has been implemented now.
 
 ### Other relevant notes
 Basically phase order:
@@ -94,6 +96,8 @@ https://github.com/FireEmblemUniverse/fireemblem8u/blob/1193deefdd322c261df42d56
 Now add x and y pos to corresponding unit in rewind-data.
 When undoing load, just clear units based on allegiance byte. When redoing load, create new unitDef on stack, copy ROM unitdef from rewind data, zero out REDAcount and REDAptr, change x and y to rewinddata's x and y.
 
+Note to future self: this plan has been implemented now.
+
 ## Limitations
 things that don't yet work and/or will not work:
   - FAD0 function (seems to be for FE7 Morphs, unused in FE8?)
@@ -103,7 +107,6 @@ things that don't yet work and/or will not work:
   - SPAWN_ALLY, SPAWN_NPC, SPAWN_ENEMY eventcodes. Shame but aren't planning to use these anyways.
   - BWL, only tracks Battles, Wins, Losses. Favoritism is too volatile, and Idc about the other stats either tbh. That said exp gained by combat is properly rewound at the moment. May change that.
   - gPlaySt.chapterTotalSupportGain does not get reset when undoing moves. Maybe I'll change this if I end up caring enough about this data.
-  - Dont run animated scripted battles during turnBasedEvents. One of these buffers (left OAMData, Framedata, right OAMData, Framedata) is used by phasechange to track unit changes during phases due to healtiles, poison, status decay etc.
   - Riding ballistae doesn't undo yet.
   - Anything rescue-related (rescuing units, giving, taking, dropping (voluntarily or due to death) doesn't undo yet.
   - Traps. Don't overlay any trap over a cracked-wall trap. GetTrapAt may return the not-cracked-wall trap and that breaks the search for the cracked-wall trap. Only once wall has been destroyed can its tiles be occupied by a different trap.

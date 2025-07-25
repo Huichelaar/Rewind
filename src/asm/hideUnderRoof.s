@@ -12,7 +12,7 @@ bl    GOTO_R0
 bl    REW_hideRoofedUnits
 
 @ Vanilla, overwritten by hook.
-ldr   r0, =UpdateUnitsUnderRoof
+ldr   r0, =UpdateRoofedUnits
 bl    GOTO_R0
 ldr   r0, =RenderBmMap
 bl    GOTO_R0

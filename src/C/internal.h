@@ -78,15 +78,15 @@ extern struct REW_RewindSequence* REW_curSequence;
 // Rewind buffer. Contains RewindSequences.
 struct REW_RewindBuffer {
   /* 00 */ u32 size;                        // Consumed space in bytes.
-  /* 04 */ struct REW_RewindSequence* end;  // Ptr to last/latest rewind entry.
-  /* 08 */ struct REW_RewindSequence start; // First rewind entry.
+  /* 04 */ struct REW_RewindSequence* end;  // Ptr to last/latest rewind sequence.
+  /* 08 */ struct REW_RewindSequence start; // First rewind sequence.
 };
 extern struct REW_RewindBuffer* REW_rewindBuffer;
 
 // Rewind entry data.
 struct REW_UnitChangeData {
   /* 00 */ u8 offs;                       // Offset of changed attribute (HP, exp, etc.)
-  /* 01 */ u8 diff;                       // Difference of attribute pre-combat vs post-combat.
+  /* 01 */ u8 diff;                       // Difference of attribute pre-change vs post-change.
 };                                        // Size varies based on how many attributes were changed.
 
 void REW_clearRewindSeq(struct REW_RewindSequence* sequence);

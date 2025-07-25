@@ -8,7 +8,7 @@ PUSH
     jumpToHack(REW_actionHookCombat)
   
   // Run additional routines when changing phases.
-  // These routine set up a phase change sequence in rewind buffer.
+  // These routines set up a phase change sequence in rewind buffer.
   //    - Tracks greyed out units. Hooks before suspend at start of BmMain_ChangePhase.
   ORG 0x15410
     jumpToHack(REW_actionHookPhaseChangeStart)
