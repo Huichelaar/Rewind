@@ -9,18 +9,29 @@ PUSH
   
   // Run additional routines when changing phases.
   // These routines set up a phase change sequence in rewind buffer.
-  //    - Tracks greyed out units. Hooks before suspend at start of BmMain_ChangePhase.
-  ORG 0x15410
+  
+  // - Tracks greyed out units. Initializes phase change action rewind entry.
+  //   - This call is immediately before the main phase-handling loop starts.
+  //     We replace the redundant SetEventId_0x84 call and move the LABEL 11 after.
+  //     This will call REW_actionPhaseChangeStart at the start of the map.
+  ORG 0x59A258
+    WORD 0x2 
+    POIN REW_actionPhaseChangeStart | 1
+    SHORT 0xB 0xB
+    WORD 0x0
+  //   - This hook is before traps are updated and before suspend.
+  //     This hook will run for every further phase change of the map.
+  ORG 0x154C8
     jumpToHack(REW_actionHookPhaseChangeStart)
-  //    - Tracks support exp gains. Replaces ProcessTurnSupportExp.
+  // - Tracks support exp gains. Replaces ProcessTurnSupportExp.
   ORG 0x28434
     jumpToHack(REW_actionPhaseChangeSuppports)
-  //    - Hooks after gProc_BMapMain label 9, sets up some data in RAM.
+  // - Hooks after gProc_BMapMain label 9, sets up some data in RAM.
   ORG 0x59A2A4
     POIN REW_actionPhaseChangeTrackStatus | 1
-  //    - Hooks immediately before gProc_BMapMain label 5.
-  //      Compares data setup previously to current values and
-  //      adds differences to rewind data.
+  // - Hooks immediately before gProc_BMapMain label 5.
+  //   Compares data setup previously to current values and
+  //   adds differences to rewind data.
   ORG 0x59A2D0
     WORD 0x2
     POIN REW_actionPhaseChangeRecordStatus | 1

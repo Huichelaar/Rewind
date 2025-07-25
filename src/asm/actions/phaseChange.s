@@ -1,25 +1,27 @@
-@ Runs immediately before phases are changed.
+@ Runs immediately before traps are decayed
+@ and phases are changed.
 @ Calls REW_actionPhaseChangeStart, which tracks
 @ greyed out units. Also inits phase change sequence.
-@ Hooked at 0x15410.
+@ Hooked at 0x154C8.
 .thumb
 
-push  {r14}
+push  {r4, r14}
+mov   r4, r0
 
 @ Init phase change sequence in rewind buffer.
-ldr   r0, =REW_actionPhaseChangeStart
-bl    GOTO_R0
+ldr   r2, =REW_actionPhaseChangeStart
+bl    GOTO_R2
 
 @ Vanilla, overwritten by hook.
-ldr   r0, =ClearActiveFactionGrayedStates
-bl    GOTO_R0
-ldr   r0, =RefreshUnitSprites
-bl    GOTO_R0
+mov   r1, r4
+pop   {r4}
+ldr   r0, =gPlaySt
+ldrb  r0, [r0, #0xF]
 
 @ Return.
-ldr   r0, =0x801541B
-GOTO_R0:
-bx    r0
+ldr   r2, =0x80154D1
+GOTO_R2:
+bx    r2
 
 @ After this hook, units' values may change, such as:
 @ Torch, barrier, status, HP due to poison or healtiles.
