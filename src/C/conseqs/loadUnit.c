@@ -19,6 +19,7 @@ void REW_redoLoadUnit(struct REW_RewindEntry* entry) {
 
 // Add loaded unit to rewind sequence.
 void REW_conseqInitUnit(struct Unit* unit, struct UnitDefinition* unitDef) {
+  
   // Don't add consequence if sequence is empty.
   if (REW_curSequence->size == 0)
     return;

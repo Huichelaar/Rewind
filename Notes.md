@@ -104,10 +104,26 @@ things that don't yet work and/or will not work:
   - gorgon eggs & hatching.
   - demon king summons.
   - phantom summon by summoners.
-  - SPAWN_ALLY, SPAWN_NPC, SPAWN_ENEMY eventcodes. Shame but aren't planning to use these anyways.
-  - BWL, only tracks Battles, Wins, Losses. Favoritism is too volatile, and Idc about the other stats either tbh. That said exp gained by combat is properly rewound at the moment. May change that.
-  - gPlaySt.chapterTotalSupportGain does not get reset when undoing moves. Maybe I'll change this if I end up caring enough about this data.
+  - SPAWN_ALLY, SPAWN_NPC, SPAWN_ENEMY eventcodes. Shame but aren't planning to use these anyways. Don't seem to be used in vanilla (confirm this!)
+  
+  - BWL rewind implementation situation
+    lossAmt:      TODO. Need to implement rewind for combatDeaths & arena still.
+    favval:       NOGO. Volatile. Changes even when not committing to actions.
+    actAmt:       NOGO. Volatile. Changes even when not committing to actions.
+    statViewAmt:  NOGO. Volatile. Changes even when not committing to actions.
+    deathLoc:     TODO. Various spots including combat, traps, etc. Start from PidStatsRecordDefeatInfo
+    deathTurn:    TODO. Various spots including combat, traps, etc. Start from PidStatsRecordDefeatInfo
+    deployAmt:    NOGO. Doesn't change during a chapter.
+    moveAmt:      TODO. PidStatsAddSquaresMoved is called only in MoveActiveUnit.
+    deathCause:   TODO. Various spots including combat, traps, etc. Start from PidStatsRecordDefeatInfo
+    expGained:    TODO. Done for non-fatal regular combat. Still need arena and fatalities.
+    winAmt:       TODO. Need to implement rewind for combatDeaths & arena still.
+    battleAmt:    TODO. Done for non-fatal regular combat. Still need arena and fatalities.
+    killerPid:    TODO. Various spots including combat, traps, etc. Start from PidStatsRecordDefeatInfo
+    deathSkirm:   TODO. Various spots including combat, traps, etc. Start from PidStatsRecordDefeatInfo
+
+  - gPlaySt.chapterTotalSupportGain does not get reset when undoing moves.
   - Riding ballistae doesn't undo yet.
   - Anything rescue-related (rescuing units, giving, taking, dropping (voluntarily or due to death) doesn't undo yet.
-  - Traps. Don't overlay any trap over a cracked-wall trap. GetTrapAt may return the not-cracked-wall trap and that breaks the search for the cracked-wall trap. Only once wall has been destroyed can its tiles be occupied by a different trap.
+  - Traps. Don't overlay any trap over a cracked-wall trap. GetTrapAt may return the not-cracked-wall trap and that breaks the search for the cracked-wall trap. Only once wall has been destroyed can its tiles be occupied by a different trap. Also, lightarrow, gas, firetile.
   - Unit loading requires every LOAD to be followed with an ENUN. As far as I'm aware vanilla does not require this, though it does abide by this. We now hard-require this. This is due to a hook in ENUN finalizing loaded units' final positions in rewind data. We can't know these positions when they're first loaded if they've got REDAs, due to the unit's final position changing if the final REDA tile is occupied.

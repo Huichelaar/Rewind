@@ -27,6 +27,7 @@ enum {
   REW_ENTRY_BASESIZE = 4,
   REW_ENTRY_PHASECHANGEDATA_BASESIZE = 0,
   REW_ENTRY_UNITCHANGEDATA_BASESIZE = 0,
+  REW_ENTRY_UNITDEFDATA_BASESIZE = 5,
   REW_ENTRY_OBSTACLE_BASESIZE = 4,
   REW_PHASECHANGEBUFFER_ENTRYSIZE = 8,      // Preferably a power of 2.
   
@@ -52,6 +53,10 @@ enum {
   
   // Obstacle flags.
   REW_OBSTACLE_SNAG = 0x1,
+  
+  // Unit change flags.
+  REW_UNITDIED_CLEARED = 0xFF,
+  REW_UNITDIED_NOCLEAR = 0xFE,
 
   // Additional 'unit' changes.
   REW_UNITOFFS_BWL = 0x48,
@@ -84,10 +89,27 @@ struct REW_RewindBuffer {
 extern struct REW_RewindBuffer* REW_rewindBuffer;
 
 // Rewind entry data.
+// Size varies based on how many attributes were changed.
 struct REW_UnitChangeData {
   /* 00 */ u8 offs;                       // Offset of changed attribute (HP, exp, etc.)
-  /* 01 */ u8 diff;                       // Difference of attribute pre-change vs post-change.
-};                                        // Size varies based on how many attributes were changed.
+  /* 01 */ u8 diff;                       // Relative difference of attribute pre-change vs post-change
+};                                        // or absolute value post-change if unit was cleared.
+
+// Rewind entry data.
+// Used for units that get cleared when they die.
+// Mimics UnitDefinition struct used to load unit.
+struct REW_UnitDefData {
+  /* 00 */ u8 charIndex  : 8;             // Reduced UnitDefinition struct.
+  /* 01 */ u8 classIndex : 8;
+  
+  /* 02 */ u8 itemDrop   : 1;
+  /* 02 */ u8 allegiance : 2;
+  /* 02 */ u8 level      : 5;
+  /* 03 */ u8 xPosition  : 6;
+  /* 03 */ u8 pad1       : 2;             // 2 separate pads, as 1 pad was netting me 
+  /* 04 */ u8 yPosition  : 6;             // "note: offset of packed bit-field <attribute-name>
+  /* 04 */ u8 pad2       : 2;             // has changed in GCC 4.4" messages.
+} __attribute__((packed));
 
 void REW_clearRewindSeq(struct REW_RewindSequence* sequence);
 struct REW_RewindEntry* REW_createSeqEntry(struct REW_RewindSequence* seq);

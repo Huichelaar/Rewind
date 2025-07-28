@@ -9,6 +9,7 @@ void REW_redoObstacleCombat(struct REW_RewindEntry* entry);
 void REW_undoCombat(struct REW_RewindEntry* entry);
 void REW_redoCombat(struct REW_RewindEntry* entry);
 
+struct UnitUsageStats REW_applyBWLChanges(struct BattleUnit* bu);
 void REW_storeCombatData(struct Unit* unit,
                          struct BattleUnit* bu,
                          int ballista,
@@ -16,6 +17,13 @@ void REW_storeCombatData(struct Unit* unit,
                          s8 yPrev,
                          struct REW_RewindSequence* rewindSeq,
                          struct REW_RewindEntry* rewindEntry);
+void REW_storeCombatDataDead(struct Unit* unit,
+                             struct BattleUnit* bu,
+                             int ballista,
+                             s8 xPrev,
+                             s8 yPrev,
+                             struct REW_RewindSequence* rewindSeq,
+                             struct REW_RewindEntry* rewindEntry);
 void REW_actionCombat();
 
 

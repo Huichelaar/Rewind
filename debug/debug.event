@@ -1,4 +1,4 @@
-#define REW_DEBUG_ch0Map1
+//#define REW_DEBUG_ch0Map1
 
 // Various changes to help test stuff.
 #define REW_DEBUG_status_poison 1
