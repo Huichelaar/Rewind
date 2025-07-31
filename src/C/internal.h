@@ -27,8 +27,8 @@ enum {
   REW_ENTRY_BASESIZE = 4,
   REW_ENTRY_PHASECHANGEDATA_BASESIZE = 0,
   REW_ENTRY_UNITCHANGEDATA_BASESIZE = 0,
-  REW_ENTRY_UNITDEFDATA_BASESIZE = 5,
   REW_ENTRY_OBSTACLE_BASESIZE = 4,
+  REW_ENTRY_UNITDEFDATA_SIZE = 5,
   REW_PHASECHANGEBUFFER_ENTRYSIZE = 8,      // Preferably a power of 2.
   
   // diffTypes. First 0x3F values are reserved for actions,
@@ -56,11 +56,14 @@ enum {
   
   // Unit change flags.
   REW_UNITDIED_CLEARED = 0xFF,
-  REW_UNITDIED_NOCLEAR = 0xFE,
+  REW_UNITDIED_NOCLEAR = 0xC0,        // Only blue units don't get cleared; Top two bits are available.
 
+  // 'Special' unit changes.
+  REW_UNITOFFS_BALLISTA_ID = 0x1C,    // Allows for adjusting ballista trap.
+  
   // Additional 'unit' changes.
   REW_UNITOFFS_BWL = 0x48,
-  REW_UNITOFFS_BALLISTA = REW_UNITOFFS_BWL + REW_BWLSIZE,
+  REW_UNITOFFS_BALLISTA_USES = REW_UNITOFFS_BWL + REW_BWLSIZE,
 };
 
 // Rewind entry. Action or consequence of action.
@@ -124,5 +127,6 @@ int REW_isUndoAvailable(struct REW_RewindSequence* sequence);
 int REW_isRedoAvailable(struct REW_RewindSequence* sequence);
 
 void REW_hideRoofedUnits();
+void REW_loadUnit(struct Unit* unit, struct REW_UnitDefData* unitDefData);
 
 #endif // INTERNAL_H

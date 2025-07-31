@@ -612,6 +612,81 @@ REW_hideRoofedUnits:
 	.size	REW_hideRoofedUnits, .-REW_hideRoofedUnits
 	.align	1
 	.p2align 2,,3
+	.global	REW_loadUnit
+	.syntax unified
+	.code	16
+	.thumb_func
+	.type	REW_loadUnit, %function
+REW_loadUnit:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 24
+	@ frame_needed = 0, uses_anonymous_args = 0
+	push	{r4, r5, r6, lr}
+	ldrb	r3, [r1]
+	sub	sp, sp, #24
+	add	r4, sp, #4
+	strb	r3, [r4]
+	ldrb	r3, [r1, #1]
+	movs	r5, r0
+	ldrb	r2, [r1, #2]
+	strb	r3, [r4, #1]
+	ldrb	r0, [r1, #3]
+	ldrb	r3, [r1, #4]
+	movs	r1, #1
+	lsls	r0, r0, #26
+	lsls	r3, r3, #26
+	lsrs	r0, r0, #26
+	ands	r1, r2
+	lsrs	r3, r3, #20
+	orrs	r3, r0
+	lsls	r1, r1, #13
+	orrs	r3, r1
+	movs	r1, #128
+	lsrs	r6, r2, #3
+	lsls	r2, r2, #29
+	lsrs	r2, r2, #30
+	lsls	r6, r6, #11
+	lsls	r2, r2, #9
+	orrs	r2, r6
+	strh	r2, [r4, #2]
+	ldr	r2, [sp, #8]
+	lsls	r1, r1, #7
+	ands	r2, r1
+	orrs	r3, r2
+	str	r3, [sp, #8]
+	movs	r3, #0
+	movs	r1, r5
+	mov	r0, sp
+	str	r3, [sp, #12]
+	str	r3, [sp, #16]
+	str	r3, [sp, #20]
+	str	r3, [sp]
+	ldr	r2, .L103
+	ldr	r3, .L103+4
+	bl	.L5
+	movs	r1, r4
+	movs	r0, r5
+	ldr	r3, .L103+8
+	bl	.L5
+	ldrb	r3, [r4, #3]
+	lsls	r3, r3, #29
+	lsrs	r3, r3, #30
+	lsls	r3, r3, #6
+	strb	r3, [r5, #11]
+	add	sp, sp, #24
+	@ sp needed
+	pop	{r4, r5, r6}
+	pop	{r0}
+	bx	r0
+.L104:
+	.align	2
+.L103:
+	.word	83886098
+	.word	CpuSet
+	.word	UnitInitFromDefinition
+	.size	REW_loadUnit, .-REW_loadUnit
+	.align	1
+	.p2align 2,,3
 	.global	REW_undoObstacleCombat
 	.syntax unified
 	.code	16
@@ -622,32 +697,32 @@ REW_undoObstacleCombat:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L105
+	ldr	r3, .L108
 	movs	r4, r0
 	ldrb	r2, [r0, #6]
 	ldrb	r1, [r0, #5]
 	ldrb	r0, [r0, #4]
 	bl	.L5
 	cmp	r0, #0
-	beq	.L103
+	beq	.L106
 	ldrb	r3, [r0, #3]
 	ldrb	r2, [r4, #7]
 	subs	r3, r3, r2
 	strb	r3, [r0, #3]
-.L102:
+.L105:
 	@ sp needed
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L103:
+.L106:
 	ldrb	r1, [r4, #5]
 	ldrb	r0, [r4, #4]
-	ldr	r3, .L105+4
+	ldr	r3, .L108+4
 	bl	.L5
 	lsls	r0, r0, #16
 	movs	r2, #0
 	movs	r1, #0
-	ldr	r3, .L105+8
+	ldr	r3, .L108+8
 	lsrs	r0, r0, #16
 	bl	.L5
 	ldrb	r3, [r4, #7]
@@ -655,12 +730,12 @@ REW_undoObstacleCombat:
 	ldrb	r1, [r4, #5]
 	ldrb	r0, [r4, #4]
 	rsbs	r3, r3, #0
-	ldr	r4, .L105+12
-	bl	.L107
-	b	.L102
-.L106:
+	ldr	r4, .L108+12
+	bl	.L110
+	b	.L105
+.L109:
 	.align	2
-.L105:
+.L108:
 	.word	GetTypedTrapAt
 	.word	GetMapChangeIdAt
 	.word	UntriggerMapChange
@@ -678,7 +753,7 @@ REW_redoObstacleCombat:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L111
+	ldr	r3, .L114
 	ldrb	r2, [r0, #6]
 	movs	r4, r0
 	ldrb	r1, [r0, #5]
@@ -690,29 +765,29 @@ REW_redoObstacleCombat:
 	lsls	r3, r3, #24
 	lsrs	r3, r3, #24
 	strb	r3, [r0, #3]
-	beq	.L110
-.L108:
+	beq	.L113
+.L111:
 	@ sp needed
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L110:
-	ldr	r3, .L111+4
+.L113:
+	ldr	r3, .L114+4
 	bl	.L5
 	ldrb	r1, [r4, #5]
 	ldrb	r0, [r4, #4]
-	ldr	r3, .L111+8
+	ldr	r3, .L114+8
 	bl	.L5
 	lsls	r0, r0, #16
 	movs	r2, #0
 	movs	r1, #0
-	ldr	r3, .L111+12
+	ldr	r3, .L114+12
 	lsrs	r0, r0, #16
 	bl	.L5
-	b	.L108
-.L112:
+	b	.L111
+.L115:
 	.align	2
-.L111:
+.L114:
 	.word	GetTypedTrapAt
 	.word	RemoveTrap
 	.word	GetMapChangeIdAt
@@ -727,121 +802,222 @@ REW_redoObstacleCombat:
 	.type	REW_undoCombat, %function
 REW_undoCombat:
 	@ Function supports interworking.
-	@ args = 0, pretend = 0, frame = 0
+	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, lr}
-	mov	lr, r10
-	mov	r7, r9
-	mov	r6, r8
-	push	{r6, r7, lr}
-	ldr	r3, .L129
-	movs	r7, r0
+	mov	r7, r10
+	mov	r6, r9
+	mov	r5, r8
+	mov	lr, fp
+	push	{r5, r6, r7, lr}
+	movs	r6, r0
+	ldr	r3, .L142
 	ldrb	r0, [r0, #1]
-	bl	.L5
-	subs	r6, r0, #0
-	beq	.L113
-	ldr	r3, [r0]
-	cmp	r3, #0
-	beq	.L113
-	movs	r3, #16
-	ldrsb	r3, [r0, r3]
+	sub	sp, sp, #12
 	mov	r10, r3
-	movs	r3, #17
-	ldrh	r1, [r7, #2]
-	ldrsb	r3, [r0, r3]
-	mov	r8, r3
-	cmp	r1, #5
-	bls	.L115
-	ldr	r3, .L129+4
-	movs	r5, #0
+	bl	.L5
+	ldrh	r3, [r6, #2]
 	mov	r9, r3
-	adds	r4, r7, #4
-	b	.L119
-.L127:
+	movs	r3, #4
+	ldrb	r7, [r6, #1]
+	rsbs	r3, r3, #0
+	add	r3, r3, r9
+	movs	r5, r0
+	mov	r8, r3
+	adds	r4, r6, #4
+	cmp	r7, #255
+	beq	.L137
+	movs	r3, #63
+	movs	r2, r7
+	bics	r2, r3
+	cmp	r2, #192
+	bne	.LCB826
+	b	.L138	@long jump
+.LCB826:
+.L118:
+	movs	r3, #16
+	ldrsb	r3, [r5, r3]
+	mov	r9, r3
+	movs	r3, #17
+	ldrsb	r3, [r5, r3]
+	mov	r10, r3
+	mov	r3, r8
+	lsrs	r6, r3, #31
+	add	r6, r6, r8
+	movs	r7, #0
+	asrs	r6, r6, #1
+	cmp	r3, #1
+	ble	.L128
+	ldr	r3, .L142+4
+	mov	r8, r3
+	b	.L127
+.L140:
+	cmp	r3, #28
+	beq	.L139
+.L124:
+	ldrb	r2, [r5, r3]
 	ldrb	r1, [r4, #1]
-	ldrb	r2, [r6, r3]
 	subs	r2, r2, r1
-	strb	r2, [r6, r3]
-	ldrh	r1, [r7, #2]
-.L117:
-	subs	r2, r1, #4
-	lsrs	r3, r2, #31
-	adds	r3, r3, r2
-	adds	r5, r5, #1
+	strb	r2, [r5, r3]
+.L125:
+	adds	r7, r7, #1
 	adds	r4, r4, #2
-	asrs	r3, r3, #1
-	cmp	r3, r5
-	ble	.L115
-.L119:
+	cmp	r6, r7
+	ble	.L128
+.L127:
 	ldrb	r3, [r4]
 	cmp	r3, #71
-	bls	.L127
+	bls	.L140
 	cmp	r3, #87
-	bls	.L128
+	bls	.L141
 	cmp	r3, #88
-	bne	.L117
-	ldr	r3, .L129+8
-	ldrb	r0, [r6, #28]
+	bne	.L125
+	ldr	r3, .L142+8
+	ldrb	r0, [r5, #28]
 	bl	.L5
 	ldrb	r2, [r4, #1]
 	ldrb	r3, [r0, #6]
+	adds	r7, r7, #1
 	subs	r3, r3, r2
 	strb	r3, [r0, #6]
-	ldrh	r1, [r7, #2]
-	subs	r2, r1, #4
-	lsrs	r3, r2, #31
-	adds	r3, r3, r2
-	adds	r5, r5, #1
 	adds	r4, r4, #2
-	asrs	r3, r3, #1
-	cmp	r3, r5
-	bgt	.L119
-.L115:
-	mov	r3, r8
-	ldr	r2, .L129+12
-	ldr	r1, [r2]
-	lsls	r3, r3, #2
-	ldr	r3, [r3, r1]
-	mov	r0, r10
+	cmp	r6, r7
+	bgt	.L127
+.L128:
+	mov	r1, r10
+	mov	r0, r9
+	lsls	r7, r1, #2
 	movs	r1, #0
+	ldr	r2, .L142+12
+	ldr	r3, [r2]
+	ldr	r3, [r7, r3]
 	strb	r1, [r3, r0]
 	movs	r3, #17
 	ldr	r1, [r2]
 	movs	r2, #16
-	ldrsb	r3, [r6, r3]
+	ldrsb	r3, [r5, r3]
 	lsls	r3, r3, #2
 	ldr	r3, [r3, r1]
-	ldrsb	r2, [r6, r2]
-	ldrb	r1, [r6, #11]
+	ldrsb	r2, [r5, r2]
+	ldrb	r1, [r5, #11]
 	strb	r1, [r3, r2]
-.L113:
+	add	sp, sp, #12
 	@ sp needed
-	pop	{r5, r6, r7}
-	mov	r10, r7
-	mov	r9, r6
-	mov	r8, r5
+	pop	{r4, r5, r6, r7}
+	mov	fp, r7
+	mov	r10, r6
+	mov	r9, r5
+	mov	r8, r4
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L128:
-	ldr	r3, [r6]
+.L141:
+	ldr	r3, [r5]
 	ldrb	r0, [r3, #4]
-	bl	.L9
+	bl	.L10
 	ldrb	r3, [r4]
 	subs	r3, r3, #72
-	ldrb	r1, [r4, #1]
 	ldrb	r2, [r0, r3]
+	ldrb	r1, [r4, #1]
 	subs	r2, r2, r1
 	strb	r2, [r0, r3]
-	ldrh	r1, [r7, #2]
-	b	.L117
-.L130:
+	b	.L125
+.L139:
+	movs	r3, #0
+	ldrb	r0, [r4, #1]
+	rsbs	r0, r0, #0
+	lsls	r0, r0, #24
+	strb	r3, [r5, #28]
+	lsrs	r0, r0, #24
+	ldr	r3, .L142+8
+	bl	.L5
+	movs	r3, #1
+	strb	r3, [r0, #5]
+	ldrb	r3, [r5, #16]
+	strb	r3, [r0]
+	ldrb	r3, [r5, #17]
+	strb	r3, [r0, #1]
+	ldrb	r3, [r4]
+	b	.L124
+.L137:
+	ldrb	r0, [r6, #6]
+	lsls	r0, r0, #29
+	lsrs	r0, r0, #30
+	ldr	r3, .L142+16
+	lsls	r0, r0, #6
+	bl	.L5
+	movs	r3, #11
+	ldrsb	r3, [r0, r3]
+	mov	r8, r3
+	movs	r1, r4
+	movs	r5, r0
+	bl	REW_loadUnit
+	mov	r3, r8
+	strb	r3, [r5, #11]
+	movs	r3, #9
+	rsbs	r3, r3, #0
+	add	r3, r3, r9
+	mov	r8, r3
+	strb	r7, [r5, #9]
+	adds	r4, r4, #5
+	b	.L118
+.L138:
+	movs	r0, r7
+	bics	r0, r2
+	bl	.L8
+	ldr	r3, .L142+20
+	movs	r5, r0
+	bl	.L5
+	mov	r9, r0
+	cmp	r0, #0
+	ble	.L121
+	ldr	r3, .L142+24
+	mov	r10, r3
+	ldr	r3, .L142+28
+	mov	fp, r3
+	movs	r3, #50
+	mov	ip, r3
+	add	ip, ip, r5
+	mov	r3, ip
+	movs	r7, #0
+	str	r3, [sp, #4]
+.L119:
+	movs	r1, r7
+	movs	r0, r5
+	bl	.L8
+	subs	r6, r0, #0
+	beq	.L120
+	ldr	r3, [r5]
+	ldrb	r1, [r3, #4]
+	bl	.L144
+	ldrb	r3, [r4, r7]
+	ldr	r2, [sp, #4]
+	adds	r6, r6, r0
+	adds	r6, r6, #50
+	strb	r3, [r6]
+	strb	r3, [r2, r7]
+.L120:
+	adds	r7, r7, #1
+	cmp	r9, r7
+	bne	.L119
+.L121:
+	mov	r3, r8
+	mov	r2, r9
+	subs	r3, r3, r2
+	mov	r8, r3
+	add	r4, r4, r9
+	b	.L118
+.L143:
 	.align	2
-.L129:
+.L142:
 	.word	GetUnit
 	.word	GetPidStats
 	.word	GetTrap
 	.word	gBmMapUnit
+	.word	GetFreeUnit
+	.word	GetUnitSupporterCount
+	.word	GetUnitSupporterUnit
+	.word	GetUnitSupporterNum
 	.size	REW_undoCombat, .-REW_undoCombat
 	.align	1
 	.p2align 2,,3
@@ -852,121 +1028,201 @@ REW_undoCombat:
 	.type	REW_redoCombat, %function
 REW_redoCombat:
 	@ Function supports interworking.
-	@ args = 0, pretend = 0, frame = 0
+	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, lr}
-	mov	lr, r10
-	mov	r7, r9
-	mov	r6, r8
-	push	{r6, r7, lr}
-	ldr	r3, .L147
-	movs	r7, r0
+	mov	r6, r9
+	mov	r5, r8
+	mov	lr, fp
+	mov	r7, r10
+	push	{r5, r6, r7, lr}
+	movs	r5, r0
+	ldr	r7, .L169
 	ldrb	r0, [r0, #1]
-	bl	.L5
-	subs	r6, r0, #0
-	beq	.L131
-	ldr	r3, [r0]
-	cmp	r3, #0
-	beq	.L131
-	movs	r3, #16
-	ldrsb	r3, [r0, r3]
-	mov	r10, r3
-	movs	r3, #17
-	ldrh	r1, [r7, #2]
-	ldrsb	r3, [r0, r3]
+	sub	sp, sp, #12
+	bl	.L7
+	adds	r3, r5, #4
+	movs	r6, r0
 	mov	r8, r3
-	cmp	r1, #5
-	bls	.L133
-	ldr	r3, .L147+4
-	movs	r5, #0
+	ldrb	r0, [r5, #1]
+	ldrh	r3, [r5, #2]
 	mov	r9, r3
-	adds	r4, r7, #4
-	b	.L137
-.L145:
-	ldrb	r1, [r4, #1]
+	subs	r4, r3, #4
+	cmp	r0, #255
+	bne	.LCB1061
+	b	.L164	@long jump
+.LCB1061:
+	movs	r3, #63
+	movs	r2, r0
+	bics	r2, r3
+	cmp	r2, #192
+	bne	.LCB1068
+	b	.L162	@long jump
+.LCB1068:
+.L163:
+	ldr	r3, .L169+4
+	mov	r10, r3
+.L148:
+	movs	r3, #16
+	ldrsb	r3, [r6, r3]
+	str	r3, [sp, #4]
+	movs	r3, #17
+	lsrs	r7, r4, #31
+	ldrsb	r3, [r6, r3]
+	adds	r7, r7, r4
+	mov	r9, r3
+	asrs	r7, r7, #1
+	cmp	r4, #1
+	bgt	.LCB1084
+	b	.L156	@long jump
+.LCB1084:
+	ldr	r3, .L169+8
+	mov	r4, r8
+	movs	r5, #0
+	mov	fp, r3
+	b	.L155
+.L167:
+	cmp	r3, #28
+	beq	.L165
+.L151:
 	ldrb	r2, [r6, r3]
+	ldrb	r1, [r4, #1]
 	adds	r2, r2, r1
 	strb	r2, [r6, r3]
-	ldrh	r1, [r7, #2]
-.L135:
-	subs	r2, r1, #4
-	lsrs	r3, r2, #31
-	adds	r3, r3, r2
+.L153:
 	adds	r5, r5, #1
 	adds	r4, r4, #2
-	asrs	r3, r3, #1
-	cmp	r3, r5
-	ble	.L133
-.L137:
+	cmp	r7, r5
+	ble	.L166
+.L155:
 	ldrb	r3, [r4]
 	cmp	r3, #71
-	bls	.L145
+	bls	.L167
 	cmp	r3, #87
-	bls	.L146
+	bls	.L168
 	cmp	r3, #88
-	bne	.L135
-	ldr	r3, .L147+8
+	bne	.L153
+	ldr	r3, .L169+12
 	ldrb	r0, [r6, #28]
 	bl	.L5
 	ldrb	r2, [r4, #1]
 	ldrb	r3, [r0, #6]
+	adds	r5, r5, #1
 	adds	r3, r3, r2
 	strb	r3, [r0, #6]
-	ldrh	r1, [r7, #2]
-	subs	r2, r1, #4
-	lsrs	r3, r2, #31
-	adds	r3, r3, r2
-	adds	r5, r5, #1
 	adds	r4, r4, #2
-	asrs	r3, r3, #1
-	cmp	r3, r5
-	bgt	.L137
-.L133:
-	mov	r3, r8
-	ldr	r2, .L147+12
-	ldr	r1, [r2]
-	lsls	r3, r3, #2
-	ldr	r3, [r3, r1]
-	mov	r0, r10
-	movs	r1, #0
-	strb	r1, [r3, r0]
+	cmp	r7, r5
+	bgt	.L155
+.L166:
 	movs	r3, #17
-	ldr	r1, [r2]
-	movs	r2, #16
+	movs	r1, #16
 	ldrsb	r3, [r6, r3]
+	ldrsb	r1, [r6, r1]
+.L149:
+	mov	r2, r10
+	ldr	r2, [r2]
 	lsls	r3, r3, #2
-	ldr	r3, [r3, r1]
-	ldrsb	r2, [r6, r2]
-	ldrb	r1, [r6, #11]
-	strb	r1, [r3, r2]
-.L131:
+	ldr	r3, [r3, r2]
+	ldrb	r2, [r6, #11]
+	strb	r2, [r3, r1]
+	mov	r3, r10
+	ldr	r2, [r3]
+	mov	r3, r9
+	lsls	r3, r3, #2
+	ldr	r3, [r3, r2]
+	movs	r2, #0
+	ldr	r1, [sp, #4]
+	strb	r2, [r3, r1]
+	add	sp, sp, #12
 	@ sp needed
-	pop	{r5, r6, r7}
-	mov	r10, r7
-	mov	r9, r6
-	mov	r8, r5
+	pop	{r4, r5, r6, r7}
+	mov	fp, r7
+	mov	r10, r6
+	mov	r9, r5
+	mov	r8, r4
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L146:
+.L168:
 	ldr	r3, [r6]
 	ldrb	r0, [r3, #4]
-	bl	.L9
+	bl	.L144
 	ldrb	r3, [r4]
 	subs	r3, r3, #72
-	ldrb	r1, [r4, #1]
 	ldrb	r2, [r0, r3]
+	ldrb	r1, [r4, #1]
 	adds	r2, r2, r1
 	strb	r2, [r0, r3]
-	ldrh	r1, [r7, #2]
-	b	.L135
-.L148:
-	.align	2
+	b	.L153
+.L165:
+	ldr	r3, .L169+12
+	ldrb	r0, [r6, #28]
+	bl	.L5
+	ldr	r3, .L169+16
+	mov	r8, r0
+	movs	r0, r6
+	bl	.L5
+	cmp	r0, #0
+	bne	.L152
+	mov	r3, r8
+	strb	r0, [r3, #5]
+.L152:
+	mov	r2, r8
+	ldrb	r3, [r6, #16]
+	strb	r3, [r2]
+	ldrb	r3, [r6, #17]
+	strb	r3, [r2, #1]
+	ldrb	r3, [r4]
+	b	.L151
+.L164:
+	ldr	r3, .L169+4
+	ldrb	r2, [r5, #8]
+	ldr	r1, [r3]
+	mov	r10, r3
+	lsls	r2, r2, #26
+	ldrb	r3, [r5, #7]
+	lsrs	r2, r2, #24
+	ldr	r2, [r2, r1]
+	lsls	r3, r3, #26
+	lsrs	r3, r3, #26
+	ldrb	r0, [r2, r3]
+	bl	.L7
+	subs	r6, r0, #0
+	beq	.L147
+	movs	r3, #0
+	str	r3, [r0]
 .L147:
+	movs	r3, #9
+	mov	r4, r9
+	mov	r8, r3
+	subs	r4, r4, #9
+	add	r8, r8, r5
+	b	.L148
+.L162:
+	bics	r0, r2
+	bl	.L7
+	movs	r6, r0
+	ldr	r3, .L169+20
+	bl	.L5
+	movs	r0, r6
+	ldr	r3, .L169+24
+	bl	.L5
+	add	r8, r8, r0
+	subs	r4, r4, r0
+	b	.L163
+.L156:
+	ldr	r1, [sp, #4]
+	b	.L149
+.L170:
+	.align	2
+.L169:
 	.word	GetUnit
+	.word	gBmMapUnit
 	.word	GetPidStats
 	.word	GetTrap
-	.word	gBmMapUnit
+	.word	GetUnitCurrentHp
+	.word	InitUnitsupports
+	.word	GetUnitSupporterCount
 	.size	REW_redoCombat, .-REW_redoCombat
 	.align	1
 	.p2align 2,,3
@@ -987,25 +1243,25 @@ REW_applyBWLChanges:
 	sub	sp, sp, #20
 	movs	r5, r0
 	ldrb	r0, [r3, #4]
-	ldr	r3, .L199
+	ldr	r3, .L221
 	movs	r6, r1
 	bl	.L5
 	mov	r4, sp
 	cmp	r0, #0
-	beq	.L151
+	beq	.L173
 	movs	r2, #8
 	mov	r1, sp
-	ldr	r3, .L199+4
+	ldr	r3, .L221+4
 	bl	.L5
 	movs	r2, #11
-	ldr	r7, .L199+8
+	ldr	r7, .L221+8
 	ldrsb	r2, [r7, r2]
 	cmp	r2, #0
-	beq	.L151
+	beq	.L173
 	movs	r3, #110
 	ldrsb	r1, [r6, r3]
 	cmp	r1, #0
-	beq	.L152
+	beq	.L174
 	ldr	r3, [sp, #8]
 	lsls	r3, r3, #8
 	lsrs	r3, r3, #20
@@ -1013,33 +1269,33 @@ REW_applyBWLChanges:
 	movs	r1, #250
 	lsls	r1, r1, #4
 	cmp	r3, r1
-	bgt	.L193
-.L153:
+	bgt	.L215
+.L175:
 	ldr	r1, [r4, #8]
-	ldr	r0, .L199+12
+	ldr	r0, .L221+12
 	lsls	r3, r3, #20
 	lsrs	r3, r3, #8
 	ands	r1, r0
 	orrs	r3, r1
 	str	r3, [r4, #8]
-.L152:
+.L174:
 	movs	r1, #11
 	movs	r3, #192
 	ldrsb	r1, [r6, r1]
 	tst	r3, r1
-	beq	.L154
-	ldr	r3, .L199+16
+	beq	.L176
+	ldr	r3, .L221+16
 	mov	r8, r3
 	ldrb	r3, [r3, #11]
 	lsls	r3, r3, #24
 	asrs	r3, r3, #24
 	cmp	r3, r1
-	beq	.L155
+	beq	.L177
 	cmp	r2, r1
-	bne	.LCB1037
-	b	.L192	@long jump
-.LCB1037:
-.L151:
+	bne	.LCB1330
+	b	.L214	@long jump
+.LCB1330:
+.L173:
 	movs	r3, r5
 	ldmia	r4!, {r0, r1, r2}
 	stmia	r3!, {r0, r1, r2}
@@ -1054,7 +1310,7 @@ REW_applyBWLChanges:
 	pop	{r4, r5, r6, r7}
 	pop	{r1}
 	bx	r1
-.L154:
+.L176:
 	movs	r0, #250
 	ldrh	r3, [r4, #12]
 	lsls	r3, r3, #18
@@ -1062,46 +1318,46 @@ REW_applyBWLChanges:
 	adds	r3, r3, #1
 	lsls	r0, r0, #4
 	cmp	r3, r0
-	bgt	.L194
-.L158:
+	bgt	.L216
+.L180:
 	lsls	r3, r3, #20
 	lsrs	r3, r3, #18
 	mov	r8, r3
 	ldrh	r0, [r4, #12]
-	ldr	r3, .L199+20
+	ldr	r3, .L221+20
 	ands	r0, r3
 	mov	r3, r8
 	orrs	r3, r0
 	strh	r3, [r4, #12]
-	ldr	r3, .L199+16
+	ldr	r3, .L221+16
 	mov	r8, r3
 	ldrb	r3, [r3, #11]
 	lsls	r3, r3, #24
 	asrs	r3, r3, #24
 	cmp	r3, r1
-	beq	.L155
+	beq	.L177
 	cmp	r2, r1
-	beq	.L192
-.L166:
+	beq	.L214
+.L188:
 	mov	r3, r8
 	ldrb	r3, [r3, #11]
 	lsls	r3, r3, #24
 	asrs	r3, r3, #24
 	cmp	r3, r1
-	bne	.LCB1095
-	b	.L195	@long jump
-.LCB1095:
-.L167:
+	bne	.LCB1388
+	b	.L217	@long jump
+.LCB1388:
+.L189:
 	movs	r3, #11
 	ldrsb	r3, [r7, r3]
 	cmp	r3, r1
-	bne	.L151
+	bne	.L173
 	mov	r0, r8
-	ldr	r3, .L199+24
+	ldr	r3, .L221+24
 	bl	.L5
 	cmp	r0, #0
-	bne	.L151
-.L170:
+	bne	.L173
+.L192:
 	movs	r1, #3
 	movs	r3, r1
 	ldrb	r2, [r4, #12]
@@ -1112,7 +1368,7 @@ REW_applyBWLChanges:
 	movs	r0, #250
 	lsls	r0, r0, #2
 	cmp	r3, r0
-	bcs	.L151
+	bcs	.L173
 	adds	r3, r3, #1
 	strb	r3, [r4, #11]
 	lsrs	r3, r3, #8
@@ -1120,37 +1376,37 @@ REW_applyBWLChanges:
 	bics	r2, r1
 	orrs	r2, r3
 	strb	r2, [r4, #12]
-	b	.L151
-.L193:
+	b	.L173
+.L215:
 	movs	r3, r1
-	b	.L153
-.L194:
+	b	.L175
+.L216:
 	movs	r3, r0
-	b	.L158
-.L155:
-	ldr	r3, .L199+24
+	b	.L180
+.L177:
+	ldr	r3, .L221+24
 	mov	r0, r8
 	mov	r9, r3
 	bl	.L5
 	cmp	r0, #0
-	bne	.L196
-.L160:
-	ldr	r3, .L199+28
+	bne	.L218
+.L182:
+	ldr	r3, .L221+28
 	bl	.L5
 	cmp	r0, #2
-	beq	.L197
+	beq	.L219
 	movs	r2, #63
-	ldr	r3, .L199+32
+	ldr	r3, .L221+32
 	ldrb	r1, [r3, #14]
 	ands	r2, r1
 	movs	r1, #0
-.L163:
+.L185:
 	ldrh	r3, [r3, #16]
 	lsls	r3, r3, #22
 	lsls	r2, r2, #8
 	lsrs	r3, r3, #8
 	orrs	r3, r2
-	ldr	r0, .L199+36
+	ldr	r0, .L221+36
 	ldr	r2, [sp, #4]
 	ands	r2, r0
 	orrs	r3, r2
@@ -1168,11 +1424,11 @@ REW_applyBWLChanges:
 	lsls	r3, r3, #24
 	asrs	r3, r3, #24
 	cmp	r3, r1
-	beq	.L198
+	beq	.L220
 	mov	r3, r8
 	ldr	r3, [r3]
 	ldrb	r0, [r3, #4]
-.L165:
+.L187:
 	movs	r2, #3
 	ands	r2, r0
 	lsls	r3, r2, #6
@@ -1197,58 +1453,58 @@ REW_applyBWLChanges:
 	movs	r2, #2
 	orrs	r3, r2
 	strb	r3, [r4, #9]
-.L161:
+.L183:
 	movs	r3, #192
 	tst	r3, r1
-	beq	.LCB1242
-	b	.L151	@long jump
-.LCB1242:
-	b	.L166
-.L192:
-	ldr	r3, .L199+24
+	beq	.LCB1535
+	b	.L173	@long jump
+.LCB1535:
+	b	.L188
+.L214:
+	ldr	r3, .L221+24
 	mov	r9, r3
-.L156:
+.L178:
 	movs	r0, r7
 	bl	.L9
 	cmp	r0, #0
-	beq	.L160
+	beq	.L182
 	movs	r1, #11
 	ldrsb	r1, [r6, r1]
-	b	.L161
-.L196:
+	b	.L183
+.L218:
 	movs	r1, #11
 	movs	r3, #11
 	ldrsb	r1, [r6, r1]
 	ldrsb	r3, [r7, r3]
 	cmp	r3, r1
-	bne	.L161
-	b	.L156
-.L195:
+	bne	.L183
+	b	.L178
+.L217:
 	movs	r0, r7
-	ldr	r3, .L199+24
+	ldr	r3, .L221+24
 	bl	.L5
 	cmp	r0, #0
-	bne	.LCB1277
-	b	.L170	@long jump
-.LCB1277:
+	bne	.LCB1570
+	b	.L192	@long jump
+.LCB1570:
 	movs	r1, #11
 	ldrsb	r1, [r6, r1]
-	b	.L167
-.L198:
+	b	.L189
+.L220:
 	ldr	r3, [r7]
 	ldrb	r0, [r3, #4]
-	b	.L165
-.L197:
+	b	.L187
+.L219:
 	movs	r2, #63
-	ldr	r3, .L199+40
+	ldr	r3, .L221+40
 	ldrb	r3, [r3, #17]
 	movs	r1, #1
 	ands	r2, r3
-	ldr	r3, .L199+32
-	b	.L163
-.L200:
+	ldr	r3, .L221+32
+	b	.L185
+.L222:
 	.align	2
-.L199:
+.L221:
 	.word	GetPidStats
 	.word	CpuSet
 	.word	gBattleTarget
@@ -1273,208 +1529,217 @@ REW_storeCombatData:
 	@ args = 12, pretend = 0, frame = 88
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, lr}
-	mov	lr, fp
-	mov	r7, r10
-	mov	r6, r8
-	push	{r6, r7, lr}
-	movs	r7, r1
-	sub	sp, sp, #88
-	movs	r5, r0
+	mov	lr, r10
+	mov	r7, r9
+	mov	r9, r1
+	push	{r7, lr}
+	sub	sp, sp, #92
 	movs	r4, r3
 	add	r3, sp, #120
 	ldrb	r3, [r3]
 	lsls	r3, r3, #24
 	asrs	r3, r3, #24
-	mov	r10, r2
-	mov	fp, r3
+	movs	r7, r2
+	mov	r10, r3
 	ldr	r2, [sp, #128]
 	ldrb	r3, [r0, #11]
+	add	r5, sp, #16
+	movs	r6, r0
 	strb	r3, [r2, #1]
-	add	r3, sp, #16
-	mov	r8, r3
-	movs	r1, r3
+	movs	r1, r5
 	movs	r2, #36
-	ldr	r3, .L244
-	movs	r0, r7
+	ldr	r3, .L269
+	mov	r0, r9
 	bl	.L5
-	ldrb	r1, [r5, #26]
-	ldrb	r3, [r7, #26]
-	ldr	r2, [r5, #4]
+	mov	r3, r9
+	ldrb	r1, [r6, #26]
+	ldrb	r3, [r3, #26]
+	ldr	r2, [r6, #4]
 	subs	r3, r3, r1
 	ldrb	r1, [r2, #17]
 	subs	r3, r3, r1
-	ldr	r1, [r5]
+	ldr	r1, [r6]
 	ldrb	r1, [r1, #19]
 	subs	r3, r3, r1
-	mov	r1, r8
-	strb	r3, [r1, #26]
-	ldrb	r3, [r7, #29]
-	ldrb	r1, [r5, #29]
+	strb	r3, [r5, #26]
+	mov	r3, r9
+	ldrb	r1, [r6, #29]
+	ldrb	r3, [r3, #29]
 	ldrb	r2, [r2, #18]
 	subs	r3, r3, r1
 	subs	r3, r3, r2
-	mov	r2, r8
-	strb	r3, [r2, #29]
+	strb	r3, [r5, #29]
+	mov	r2, r9
 	movs	r3, #82
-	ldrsb	r3, [r7, r3]
+	ldrsb	r3, [r2, r3]
 	cmp	r3, #0
-	beq	.L202
+	beq	.L224
 	movs	r3, #81
+	mov	r1, r9
+	ldrb	r3, [r2, r3]
 	movs	r2, #72
-	ldrb	r3, [r7, r3]
 	adds	r3, r3, #12
-	ldrh	r2, [r7, r2]
+	ldrh	r2, [r1, r2]
 	lsls	r3, r3, #1
-	add	r3, r3, r8
+	adds	r3, r5, r3
 	strh	r2, [r3, #6]
-.L202:
+.L224:
 	movs	r3, #111
-	ldrsb	r1, [r7, r3]
+	mov	r2, r9
+	ldrsb	r1, [r2, r3]
 	cmp	r1, #0
-	blt	.L203
-	mov	r0, r8
-	ldr	r3, .L244+4
+	blt	.L225
+	movs	r0, r5
+	ldr	r3, .L269+4
 	bl	.L5
-.L203:
-	mov	r3, r8
+.L225:
+	mov	r1, r9
 	movs	r2, #115
-	ldrb	r3, [r3, #18]
-	ldrb	r2, [r7, r2]
-	ldr	r1, [sp, #36]
+	ldrb	r3, [r5, #18]
+	ldrb	r2, [r1, r2]
 	adds	r3, r3, r2
-	mov	r2, r8
+	ldr	r1, [sp, #36]
+	strb	r3, [r5, #18]
+	mov	r3, r9
 	movs	r0, r1
-	strb	r3, [r2, #18]
-	ldr	r3, [r7, #116]
-	ldr	r2, .L244+8
+	ldr	r3, [r3, #116]
+	ldr	r2, .L269+8
 	ands	r0, r2
 	ands	r2, r3
 	eors	r3, r1
-	ldr	r1, .L244+12
+	ldr	r1, .L269+12
 	adds	r2, r0, r2
 	ands	r3, r1
 	eors	r3, r2
-	str	r3, [sp, #36]
+	mov	r1, r9
 	movs	r2, #120
-	mov	r3, r8
-	ldrb	r2, [r7, r2]
-	ldrb	r3, [r3, #24]
+	str	r3, [sp, #36]
+	ldrb	r2, [r1, r2]
+	ldrb	r3, [r5, #24]
 	adds	r3, r3, r2
-	mov	r2, r8
-	strb	r3, [r2, #24]
-	ldrb	r3, [r2, #25]
 	movs	r2, #121
-	ldrb	r2, [r7, r2]
+	strb	r3, [r5, #24]
+	ldrb	r3, [r5, #25]
+	ldrb	r2, [r1, r2]
 	adds	r3, r3, r2
-	mov	r2, r8
-	mov	r0, r8
-	strb	r3, [r2, #25]
-	ldr	r3, .L244+16
+	movs	r0, r5
+	strb	r3, [r5, #25]
+	ldr	r3, .L269+16
 	bl	.L5
-	movs	r0, r7
-	ldr	r3, .L244+20
+	mov	r0, r9
+	ldr	r3, .L269+20
 	bl	.L5
 	cmp	r0, #0
-	ble	.L204
+	ble	.L226
 	movs	r3, #80
-	ldrb	r3, [r7, r3]
-	add	r3, r3, r8
+	mov	r2, r9
+	ldrb	r3, [r2, r3]
+	adds	r3, r5, r3
 	adds	r3, r3, #40
 	strb	r0, [r3]
-.L204:
-	ldr	r3, .L244+24
-	mov	r0, r8
+.L226:
+	ldr	r3, .L269+24
+	movs	r0, r5
 	bl	.L5
+	ldr	r3, [r5, #12]
+	orrs	r3, r7
+	str	r3, [r5, #12]
 	ldr	r3, [sp, #128]
-	adds	r6, r3, #4
-	mov	r3, r8
-	ldrb	r3, [r3, #16]
+	adds	r7, r3, #4
+	ldrb	r3, [r5, #16]
 	subs	r3, r3, r4
 	lsls	r3, r3, #24
 	movs	r4, #0
 	lsrs	r2, r3, #24
 	cmp	r3, #0
-	beq	.L205
+	beq	.L227
 	movs	r3, #16
 	ldr	r1, [sp, #128]
 	strb	r3, [r1, #4]
 	strb	r2, [r1, #5]
 	adds	r4, r4, #1
-.L205:
-	mov	r3, r8
-	mov	r2, fp
-	ldrb	r3, [r3, #17]
+.L227:
+	mov	r2, r10
+	ldrb	r3, [r5, #17]
 	subs	r3, r3, r2
 	lsls	r3, r3, #24
 	lsrs	r2, r3, #24
 	cmp	r3, #0
-	beq	.L206
+	beq	.L228
 	movs	r1, #17
 	lsls	r3, r4, #1
-	adds	r3, r6, r3
+	adds	r3, r7, r3
 	strb	r1, [r3]
 	strb	r2, [r3, #1]
 	adds	r4, r4, #1
-.L206:
-	mov	r1, r8
+.L228:
+	movs	r1, r5
 	movs	r2, #0
-.L208:
-	ldrb	r0, [r5, r2]
+.L230:
+	ldrb	r0, [r6, r2]
 	ldrb	r3, [r1]
 	subs	r3, r3, r0
 	lsls	r3, r3, #24
 	lsrs	r0, r3, #24
 	cmp	r3, #0
-	beq	.L207
+	beq	.L229
 	lsls	r3, r4, #1
-	adds	r3, r6, r3
+	adds	r3, r7, r3
 	strb	r2, [r3]
 	strb	r0, [r3, #1]
 	adds	r4, r4, #1
-.L207:
+.L229:
 	adds	r2, r2, #1
 	adds	r1, r1, #1
 	cmp	r2, #72
-	bne	.L208
-	mov	r3, r10
-	cmp	r3, #0
-	bne	.L243
-.L211:
-	ldr	r3, [r7]
+	bne	.L230
+	mov	r3, r9
+	ldr	r3, [r3]
 	ldrb	r0, [r3, #4]
-	ldr	r3, .L244+28
+	ldr	r3, .L269+28
 	bl	.L5
-	mov	r8, r0
-	cmp	r0, #0
-	beq	.L212
+	subs	r6, r0, #0
+	beq	.L231
+	mov	r1, r9
 	mov	r0, sp
-	movs	r1, r7
 	bl	REW_applyBWLChanges
 	mov	r3, sp
-	mov	r0, r8
+	subs	r3, r3, #1
 	movs	r2, #1
-	subs	r5, r3, #1
-	subs	r0, r0, #1
-.L214:
-	ldrb	r1, [r0, r2]
-	ldrb	r3, [r5, r2]
-	subs	r3, r3, r1
+	mov	r10, r3
+	subs	r6, r6, #1
+.L233:
+	mov	r3, r10
+	ldrb	r0, [r6, r2]
+	ldrb	r3, [r3, r2]
+	subs	r3, r3, r0
 	lsls	r3, r3, #24
-	lsrs	r1, r3, #24
+	lsrs	r0, r3, #24
 	cmp	r3, #0
-	beq	.L213
-	movs	r7, r2
+	beq	.L232
+	movs	r1, #71
+	mov	ip, r1
+	add	ip, ip, r2
+	mov	r1, ip
 	lsls	r3, r4, #1
-	adds	r3, r6, r3
-	adds	r7, r7, #71
-	strb	r7, [r3]
-	strb	r1, [r3, #1]
+	adds	r3, r7, r3
+	strb	r1, [r3]
+	strb	r0, [r3, #1]
 	adds	r4, r4, #1
-.L213:
+.L232:
 	adds	r2, r2, #1
 	cmp	r2, #17
-	bne	.L214
-.L212:
+	bne	.L233
+.L231:
+	ldrb	r3, [r5, #28]
+	cmp	r3, #0
+	beq	.L236
+	movs	r3, #72
+	mov	r2, r9
+	ldrh	r0, [r2, r3]
+	cmp	r0, #0
+	bne	.L268
+.L236:
 	adds	r4, r4, #2
 	ldr	r2, [sp, #128]
 	lsls	r3, r4, #17
@@ -1483,9 +1748,9 @@ REW_storeCombatData:
 	ldr	r2, [sp, #124]
 	ldrh	r2, [r2, #2]
 	cmp	r2, #0
-	bne	.L215
+	bne	.L237
 	adds	r2, r2, #4
-.L215:
+.L237:
 	adds	r3, r3, r2
 	movs	r2, #3
 	movs	r1, r2
@@ -1493,48 +1758,45 @@ REW_storeCombatData:
 	lsrs	r3, r3, #16
 	ands	r1, r3
 	tst	r2, r3
-	beq	.L216
+	beq	.L238
 	adds	r3, r3, #4
 	subs	r3, r3, r1
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L216:
+.L238:
 	ldr	r2, [sp, #124]
 	strh	r3, [r2, #2]
-	add	sp, sp, #88
+	add	sp, sp, #92
 	@ sp needed
-	pop	{r5, r6, r7}
-	mov	fp, r7
-	mov	r10, r6
-	mov	r8, r5
+	pop	{r6, r7}
+	mov	r10, r7
+	mov	r9, r6
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L243:
-	ldrh	r0, [r7, r2]
-	ldr	r3, .L244+32
+.L268:
+	ldr	r3, .L269+32
 	bl	.L5
-	mov	r3, r8
-	movs	r5, r0
-	ldrb	r0, [r3, #28]
-	ldr	r3, .L244+36
+	ldr	r3, .L269+36
+	movs	r6, r0
+	ldrb	r0, [r5, #28]
 	bl	.L5
 	ldrb	r3, [r0, #6]
-	subs	r3, r5, r3
+	subs	r3, r6, r3
 	lsls	r3, r3, #24
 	lsrs	r2, r3, #24
 	cmp	r3, #0
-	beq	.L211
-	movs	r1, #88
+	beq	.L236
 	lsls	r3, r4, #1
-	adds	r3, r6, r3
-	strb	r1, [r3]
-	strb	r2, [r3, #1]
+	adds	r7, r7, r3
+	movs	r3, #88
+	strb	r2, [r7, #1]
+	strb	r3, [r7]
 	adds	r4, r4, #1
-	b	.L211
-.L245:
+	b	.L236
+.L270:
 	.align	2
-.L244:
+.L269:
 	.word	CpuSet
 	.word	SetUnitStatus
 	.word	2139062143
@@ -1555,212 +1817,166 @@ REW_storeCombatData:
 	.type	REW_storeCombatDataDead, %function
 REW_storeCombatDataDead:
 	@ Function supports interworking.
-	@ args = 12, pretend = 0, frame = 120
+	@ args = 12, pretend = 0, frame = 104
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, lr}
-	mov	r6, r9
-	mov	r7, r10
-	mov	r5, r8
 	mov	lr, fp
-	push	{r5, r6, r7, lr}
-	sub	sp, sp, #124
-	ldr	r7, [sp, #168]
-	str	r1, [sp, #4]
-	adds	r1, r7, #4
-	str	r1, [sp]
-	movs	r1, #192
-	movs	r4, r0
-	movs	r0, #11
-	movs	r5, r1
-	ldr	r6, [r4, #4]
-	add	r2, sp, #160
-	ldrb	r2, [r2]
-	ldrsb	r0, [r4, r0]
-	ldrb	r6, [r6, #4]
-	lsls	r2, r2, #24
-	mov	r9, r6
-	asrs	r2, r2, #24
-	ands	r5, r0
-	tst	r1, r0
-	bne	.L247
-	cmp	r6, #81
-	beq	.LCB1652
-	b	.L281	@long jump
-.LCB1652:
-.L247:
-	movs	r1, #255
-	strb	r1, [r7, #1]
-	ldr	r1, [r4]
-	ldrb	r1, [r1, #4]
-	strb	r1, [r7, #4]
-	mov	r10, r1
-	mov	r1, r9
-	strb	r1, [r7, #5]
-	ldr	r1, [r4, #12]
-	asrs	r0, r0, #6
-	lsrs	r5, r1, #12
-	mov	ip, r5
-	lsls	r5, r0, #1
-	mov	r8, r5
-	movs	r5, #6
-	mov	fp, r5
+	mov	r7, r10
+	mov	r6, r9
 	mov	r5, r8
-	mov	r1, fp
-	ands	r5, r1
-	subs	r1, r1, #5
-	mov	fp, r5
-	movs	r5, r1
-	mov	r1, ip
-	ands	r5, r1
-	mov	r8, r5
-	movs	r6, #8
-	mov	r1, r8
-	mov	r5, fp
-	ldrsb	r6, [r4, r6]
-	orrs	r5, r1
-	lsls	r1, r6, #3
-	orrs	r5, r1
-	movs	r1, #63
-	mov	r8, r1
-	ands	r3, r1
-	ldrb	r1, [r7, #7]
-	strb	r5, [r7, #6]
-	movs	r5, r1
-	mov	r1, r8
-	ands	r2, r1
-	bics	r5, r1
-	ldrb	r1, [r7, #8]
-	orrs	r5, r3
-	strb	r5, [r7, #7]
-	movs	r5, r1
-	mov	r1, r8
-	bics	r5, r1
-	orrs	r5, r2
-	strb	r5, [r7, #8]
-	mov	r5, r10
-	add	r1, sp, #28
-	strb	r5, [r1]
-	mov	r5, r9
-	mov	r8, r1
-	strb	r5, [r1, #1]
-	movs	r1, #3
-	lsls	r2, r2, #6
-	ands	r0, r1
-	orrs	r3, r2
-	mov	r1, r8
-	mov	r2, ip
-	lsls	r6, r6, #11
-	lsls	r0, r0, #9
-	orrs	r0, r6
-	strh	r0, [r1, #2]
-	lsls	r1, r2, #13
-	movs	r2, #128
-	lsls	r2, r2, #6
-	ands	r1, r2
-	orrs	r3, r1
-	movs	r1, #128
-	ldr	r2, [sp, #32]
-	lsls	r1, r1, #7
-	ands	r2, r1
-	orrs	r3, r2
-	str	r3, [sp, #32]
-	mov	r2, r8
-	movs	r3, #0
-	add	r6, sp, #48
-	str	r3, [r2, #8]
-	movs	r1, r6
-	str	r3, [sp, #40]
-	str	r3, [sp, #44]
-	str	r3, [sp, #8]
-	ldr	r2, .L282
-	ldr	r3, .L282+4
-	add	r0, sp, #8
-	bl	.L5
-	ldr	r3, .L282+8
-	mov	r1, r8
-	movs	r0, r6
-	bl	.L5
-	movs	r3, #255
-	strb	r3, [r6, #9]
+	mov	fp, r1
+	movs	r1, #0
+	push	{r5, r6, r7, lr}
+	sub	sp, sp, #108
+	str	r2, [sp, #8]
+	add	r2, sp, #144
+	ldrsb	r1, [r2, r1]
+	movs	r2, #11
+	movs	r4, r0
+	ldrsb	r2, [r0, r2]
+	movs	r0, #192
+	movs	r7, r0
+	ands	r7, r2
+	str	r7, [sp, #4]
+	ldr	r7, [r4, #4]
+	ldr	r6, [sp, #152]
+	ldrb	r7, [r7, #4]
+	adds	r5, r6, #4
+	mov	ip, r7
+	tst	r0, r2
+	bne	.L272
+	cmp	r7, #81
+	beq	.LCB1952
+	b	.L315	@long jump
+.LCB1952:
+.L272:
+	movs	r0, #255
+	strb	r0, [r6, #1]
+	mov	r8, r0
+	ldr	r0, [r4]
+	ldrb	r0, [r0, #4]
+	strb	r0, [r6, #4]
+	mov	r0, ip
+	strb	r0, [r6, #5]
+	movs	r0, #6
+	asrs	r2, r2, #5
+	ands	r2, r0
+	ldr	r0, [r4, #12]
+	lsls	r0, r0, #19
+	lsrs	r0, r0, #31
+	orrs	r2, r0
+	ldrb	r0, [r4, #8]
+	lsls	r0, r0, #3
+	orrs	r2, r0
+	strb	r2, [r6, #6]
+	movs	r2, #63
+	ands	r3, r2
+	movs	r0, r3
+	ldrb	r3, [r6, #7]
+	bics	r3, r2
+	orrs	r3, r0
+	strb	r3, [r6, #7]
+	movs	r3, r1
+	ldrb	r1, [r6, #8]
+	ands	r3, r2
+	bics	r1, r2
+	orrs	r1, r3
+	add	r7, sp, #32
+	strb	r1, [r6, #8]
+	movs	r0, r7
+	movs	r1, r5
+	bl	REW_loadUnit
+	mov	r3, r8
+	strb	r3, [r7, #9]
 	ldrb	r3, [r4, #11]
-	strb	r3, [r6, #11]
+	strb	r3, [r7, #11]
 	ldr	r3, [r4, #60]
-	str	r3, [sp, #108]
+	str	r3, [sp, #92]
 	movs	r3, #9
-	adds	r5, r7, #4
 	adds	r5, r5, #5
-.L249:
-	movs	r1, r6
+.L274:
+	movs	r1, r7
 	movs	r2, #0
-	movs	r6, #0
-	strh	r3, [r7, #2]
-.L253:
-	ldrb	r0, [r1]
-	ldrb	r3, [r4, r2]
+	movs	r7, #0
+	strh	r3, [r6, #2]
+.L278:
+	ldrb	r0, [r4, r2]
+	ldrb	r3, [r1]
 	subs	r3, r3, r0
 	lsls	r3, r3, #24
 	lsrs	r0, r3, #24
 	cmp	r3, #0
-	beq	.L252
-	lsls	r3, r6, #1
+	beq	.L277
+	lsls	r3, r7, #1
 	adds	r3, r5, r3
 	strb	r2, [r3]
 	strb	r0, [r3, #1]
-	adds	r6, r6, #1
-.L252:
+	adds	r7, r7, #1
+.L277:
 	adds	r2, r2, #1
 	adds	r1, r1, #1
 	cmp	r2, #72
-	bne	.L253
+	bne	.L278
 	ldr	r3, [r4]
 	ldrb	r0, [r3, #4]
-	ldr	r3, .L282+12
+	ldr	r3, .L317
 	bl	.L5
 	mov	r8, r0
 	cmp	r0, #0
-	beq	.L254
-	add	r0, sp, #12
-	ldr	r1, [sp, #4]
+	beq	.L279
+	mov	r1, fp
+	add	r0, sp, #16
 	bl	REW_applyBWLChanges
 	mov	r0, r8
 	movs	r2, #1
-	mov	ip, r7
-	add	r3, sp, #8
-	adds	r4, r3, #3
+	mov	ip, r4
+	mov	r8, r6
+	add	r3, sp, #16
+	subs	r1, r3, #1
 	subs	r0, r0, #1
-.L256:
-	ldrb	r1, [r0, r2]
-	ldrb	r3, [r4, r2]
-	subs	r3, r3, r1
+.L281:
+	ldrb	r4, [r0, r2]
+	ldrb	r3, [r1, r2]
+	subs	r3, r3, r4
 	lsls	r3, r3, #24
-	lsrs	r1, r3, #24
+	lsrs	r4, r3, #24
 	cmp	r3, #0
-	beq	.L255
-	movs	r7, r2
-	lsls	r3, r6, #1
+	beq	.L280
+	movs	r6, r2
+	lsls	r3, r7, #1
 	adds	r3, r5, r3
-	adds	r7, r7, #71
-	strb	r7, [r3]
-	strb	r1, [r3, #1]
-	adds	r6, r6, #1
-.L255:
+	adds	r6, r6, #71
+	strb	r6, [r3]
+	strb	r4, [r3, #1]
+	adds	r7, r7, #1
+.L280:
 	adds	r2, r2, #1
 	cmp	r2, #17
-	bne	.L256
-	mov	r7, ip
-.L254:
-	ldrh	r3, [r7, #2]
-	lsls	r6, r6, #1
-	adds	r3, r3, r6
+	bne	.L281
+	mov	r4, ip
+	mov	r6, r8
+.L279:
+	ldrb	r3, [r4, #28]
+	cmp	r3, #0
+	beq	.L284
+	movs	r3, #72
+	mov	r2, fp
+	ldrh	r0, [r2, r3]
+	cmp	r0, #0
+	bne	.L316
+.L284:
+	ldrh	r3, [r6, #2]
+	lsls	r7, r7, #1
+	adds	r3, r3, r7
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-	strh	r3, [r7, #2]
-	ldr	r2, [sp, #164]
+	strh	r3, [r6, #2]
+	ldr	r2, [sp, #148]
 	ldrh	r2, [r2, #2]
 	cmp	r2, #0
-	bne	.L257
+	bne	.L285
 	adds	r2, r2, #4
-.L257:
+.L285:
 	adds	r3, r3, r2
 	movs	r2, #3
 	movs	r1, r2
@@ -1768,15 +1984,15 @@ REW_storeCombatDataDead:
 	lsrs	r3, r3, #16
 	ands	r1, r3
 	tst	r2, r3
-	beq	.L258
+	beq	.L286
 	adds	r3, r3, #4
 	subs	r3, r3, r1
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L258:
-	ldr	r2, [sp, #164]
+.L286:
+	ldr	r2, [sp, #148]
 	strh	r3, [r2, #2]
-	add	sp, sp, #124
+	add	sp, sp, #108
 	@ sp needed
 	pop	{r4, r5, r6, r7}
 	mov	fp, r7
@@ -1786,70 +2002,109 @@ REW_storeCombatDataDead:
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L281:
-	movs	r3, #254
-	movs	r0, r4
-	strb	r3, [r7, #1]
-	ldr	r3, .L282+16
-	bl	.L5
-	mov	r9, r0
-	cmp	r0, #0
-	ble	.L251
-	ldr	r3, .L282+20
-	mov	r10, r3
-	ldr	r3, .L282+24
-	mov	r8, r7
-	mov	fp, r3
-	movs	r7, r0
-.L248:
-	movs	r1, r5
-	movs	r0, r4
-	bl	.L8
-	subs	r6, r0, #0
-	beq	.L250
-	ldr	r3, [r4]
-	ldrb	r1, [r3, #4]
-	bl	.L284
-	adds	r6, r6, r0
-	adds	r6, r6, #50
-	ldrb	r3, [r6]
-	ldr	r2, [sp]
-	strb	r3, [r2, r5]
-.L250:
-	adds	r5, r5, #1
-	cmp	r7, r5
-	bne	.L248
-	mov	r9, r7
-	mov	r7, r8
-.L251:
-	add	r6, sp, #48
-	ldr	r2, .L282+28
-	ldr	r3, .L282+4
-	movs	r1, r6
-	movs	r0, r4
-	bl	.L5
-	movs	r2, #5
-	ldr	r3, [r6, #12]
+.L315:
+	movs	r3, #64
+	rsbs	r3, r3, #0
 	orrs	r3, r2
-	str	r3, [r6, #12]
-	mov	r3, r9
-	ldr	r5, [sp]
+	strb	r3, [r6, #1]
+	movs	r0, r4
+	ldr	r3, .L317+4
+	bl	.L5
+	mov	r8, r0
+	cmp	r0, #0
+	ble	.L276
+	ldr	r3, .L317+8
+	mov	r9, r3
+	ldr	r3, .L317+12
+	mov	r10, r3
+	mov	r3, fp
+	mov	fp, r6
+	movs	r6, r0
+	mov	r8, r5
+	str	r3, [sp, #12]
+	movs	r5, r4
+	ldr	r4, [sp, #4]
+.L273:
+	movs	r1, r4
+	movs	r0, r5
+	bl	.L9
+	subs	r7, r0, #0
+	beq	.L275
+	ldr	r3, [r5]
+	ldrb	r1, [r3, #4]
+	bl	.L8
+	mov	r2, r8
+	adds	r7, r7, r0
+	adds	r7, r7, #50
+	ldrb	r3, [r7]
+	strb	r3, [r2, r4]
+.L275:
+	adds	r4, r4, #1
+	cmp	r6, r4
+	bne	.L273
+	ldr	r3, [sp, #12]
+	movs	r4, r5
+	mov	r5, r8
+	mov	r8, r6
+	mov	r6, fp
+	mov	fp, r3
+.L276:
+	add	r7, sp, #32
+	ldr	r2, .L317+16
+	ldr	r3, .L317+20
+	movs	r1, r7
+	movs	r0, r4
+	bl	.L5
+	ldr	r3, [r7, #12]
+	ldr	r2, [sp, #8]
+	orrs	r2, r3
+	movs	r3, r2
+	ldr	r2, .L317+24
+	ands	r3, r2
+	str	r3, [r7, #12]
+	movs	r3, #0
+	strb	r3, [r7, #28]
+	mov	r3, r8
 	adds	r3, r3, #4
 	lsls	r3, r3, #16
-	add	r5, r5, r9
+	add	r5, r5, r8
 	lsrs	r3, r3, #16
-	b	.L249
-.L283:
+	b	.L274
+.L316:
+	ldr	r3, .L317+28
+	bl	.L5
+	mov	r8, r0
+	ldr	r3, .L317+32
+	ldrb	r0, [r4, #28]
+	bl	.L5
+	mov	r2, r8
+	ldrb	r3, [r0, #6]
+	subs	r3, r2, r3
+	lsls	r3, r3, #24
+	lsrs	r2, r3, #24
+	cmp	r3, #0
+	bne	.LCB2213
+	b	.L284	@long jump
+.LCB2213:
+	lsls	r3, r7, #1
+	adds	r5, r5, r3
+	movs	r3, #88
+	strb	r2, [r5, #1]
+	strb	r3, [r5]
+	adds	r7, r7, #1
+	b	.L284
+.L318:
 	.align	2
-.L282:
-	.word	83886098
-	.word	CpuSet
-	.word	UnitInitFromDefinition
+.L317:
 	.word	GetPidStats
 	.word	GetUnitSupporterCount
 	.word	GetUnitSupporterUnit
 	.word	GetUnitSupporterNum
 	.word	67108882
+	.word	CpuSet
+	.word	-2049
+	.word	GetItemUses
+	.word	GetTrap
 	.size	REW_storeCombatDataDead, .-REW_storeCombatDataDead
 	.align	1
 	.p2align 2,,3
@@ -1868,55 +2123,61 @@ REW_actionCombat:
 	mov	r6, r8
 	movs	r0, #11
 	push	{r6, r7, lr}
-	ldr	r6, .L297
-	ldr	r3, .L297+4
-	ldr	r5, .L297+8
-	sub	sp, sp, #16
-	ldrsb	r0, [r6, r0]
+	ldr	r3, .L331
 	ldr	r4, [r3]
+	ldr	r3, .L331+4
+	ldr	r5, .L331+8
+	ldrsb	r0, [r3, r0]
+	sub	sp, sp, #16
+	mov	r9, r3
 	bl	.L6
-	mov	r9, r0
+	movs	r6, r0
 	movs	r0, #11
-	ldr	r3, .L297+12
+	ldr	r3, .L331+12
 	ldrsb	r0, [r3, r0]
 	mov	r8, r3
 	bl	.L6
 	movs	r3, #4
-	movs	r2, #8
 	strh	r3, [r4, #2]
 	subs	r3, r3, #2
 	strb	r3, [r4, #4]
-	mov	r10, r3
-	ldr	r3, .L297+16
-	ldrh	r3, [r3]
-	ands	r2, r3
+	mov	r1, r9
 	movs	r3, #0
-	movs	r5, r0
-	movs	r0, #19
-	ldr	r1, .L297+20
-	ldrsb	r3, [r1, r3]
-	ldrb	r1, [r1, #2]
-	ldrsb	r0, [r6, r0]
+	ldr	r2, .L331+16
+	ldrb	r1, [r1, #19]
+	ldrsb	r3, [r2, r3]
+	ldrb	r2, [r2, #2]
 	lsls	r1, r1, #24
-	mov	ip, r3
+	lsls	r2, r2, #24
+	movs	r5, r0
 	adds	r7, r4, #4
+	asrs	r2, r2, #24
 	asrs	r1, r1, #24
-	cmp	r0, #0
-	bne	.L286
-	str	r1, [sp]
-	mov	r0, r9
-	movs	r1, r6
+	bne	.L320
+	movs	r0, #1
+	mov	r10, r0
+	ldr	r1, [r6, #12]
+	bics	r1, r0
+	str	r1, [r6, #12]
+	movs	r0, r6
+	str	r2, [sp]
+	mov	r1, r9
+	movs	r2, #7
 	str	r7, [sp, #8]
 	str	r4, [sp, #4]
 	bl	REW_storeCombatDataDead
+	mov	r2, r10
+	ldr	r3, [r6, #12]
+	orrs	r3, r2
+	str	r3, [r6, #12]
 	ldrh	r3, [r4, #2]
 	cmp	r3, #0
-	beq	.L288
-.L295:
+	beq	.L322
+.L329:
 	adds	r7, r4, r3
 	cmp	r5, #0
-	beq	.L290
-.L296:
+	beq	.L324
+.L330:
 	movs	r3, #2
 	mov	r2, r8
 	movs	r1, #17
@@ -1930,12 +2191,12 @@ REW_actionCombat:
 	str	r7, [sp, #8]
 	str	r4, [sp, #4]
 	str	r1, [sp]
-	beq	.L294
+	beq	.L328
 	movs	r2, #0
 	mov	r1, r8
 	movs	r0, r5
 	bl	REW_storeCombatData
-.L285:
+.L319:
 	add	sp, sp, #16
 	@ sp needed
 	pop	{r5, r6, r7}
@@ -1945,42 +2206,34 @@ REW_actionCombat:
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L286:
-	mov	r3, r10
-	ldr	r0, [r6, #12]
-	orrs	r0, r3
-	str	r0, [r6, #12]
-	mov	r3, ip
-	str	r1, [sp]
-	mov	r0, r9
-	movs	r1, r6
+.L320:
+	str	r2, [sp]
+	mov	r1, r9
+	movs	r2, #3
+	movs	r0, r6
 	str	r7, [sp, #8]
 	str	r4, [sp, #4]
 	bl	REW_storeCombatData
-	mov	r2, r10
-	ldr	r3, [r6, #12]
-	bics	r3, r2
-	str	r3, [r6, #12]
 	ldrh	r3, [r4, #2]
 	cmp	r3, #0
-	bne	.L295
-.L288:
+	bne	.L329
+.L322:
 	movs	r3, #4
 	strh	r3, [r4, #2]
 	cmp	r5, #0
-	bne	.L296
-.L290:
+	bne	.L330
+.L324:
 	mov	r3, r8
 	movs	r1, #17
 	movs	r0, #16
 	ldrsb	r1, [r3, r1]
 	ldrsb	r0, [r3, r0]
-	ldr	r3, .L297+24
+	ldr	r3, .L331+20
 	bl	.L5
 	movs	r3, #65
 	strh	r3, [r7]
 	mov	r3, r8
-	ldr	r2, .L297+28
+	ldr	r2, .L331+24
 	ldr	r1, [r2]
 	mov	r2, r8
 	ldrb	r3, [r3, #17]
@@ -2018,27 +2271,27 @@ REW_actionCombat:
 	lsrs	r3, r3, #16
 	ands	r0, r3
 	tst	r1, r3
-	bne	.L293
+	bne	.L327
 	strh	r3, [r4, #2]
-	b	.L285
-.L294:
+	b	.L319
+.L328:
 	mov	r1, r8
 	movs	r0, r5
+	adds	r2, r2, #5
 	bl	REW_storeCombatDataDead
-	b	.L285
-.L293:
+	b	.L319
+.L327:
 	adds	r2, r2, #12
 	subs	r2, r2, r0
 	strh	r2, [r4, #2]
-	b	.L285
-.L298:
+	b	.L319
+.L332:
 	.align	2
-.L297:
-	.word	gBattleActor
+.L331:
 	.word	REW_curSequence
+	.word	gBattleActor
 	.word	GetUnit
 	.word	gBattleTarget
-	.word	gBattleStats
 	.word	gActiveUnitMoveOrigin
 	.word	GetTrapAt
 	.word	gBmMapTerrain
@@ -2058,52 +2311,52 @@ REW_undoPhaseChange:
 	mov	lr, r8
 	push	{lr}
 	ldrb	r3, [r0, #1]
-	ldr	r2, .L315
+	ldr	r2, .L349
 	lsls	r1, r3, #6
 	movs	r5, r0
 	strb	r1, [r2, #15]
 	lsls	r3, r3, #27
-	bpl	.L300
+	bpl	.L334
 	ldrh	r3, [r2, #16]
 	subs	r3, r3, #1
 	strh	r3, [r2, #16]
-.L300:
+.L334:
 	ldrh	r3, [r5, #2]
 	cmp	r3, #4
-	bls	.L299
+	bls	.L333
 	movs	r3, #2
 	movs	r4, #0
 	mov	r8, r3
-	ldr	r6, .L315+4
+	ldr	r6, .L349+4
 	adds	r7, r5, #4
-.L303:
+.L337:
 	ldrb	r0, [r7, r4]
 	bl	.L11
 	cmp	r0, #0
-	beq	.L302
+	beq	.L336
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L302
+	beq	.L336
 	mov	r2, r8
 	ldr	r3, [r0, #12]
 	orrs	r3, r2
 	str	r3, [r0, #12]
-.L302:
+.L336:
 	ldrh	r3, [r5, #2]
 	adds	r4, r4, #1
 	subs	r3, r3, #4
 	cmp	r3, r4
-	bgt	.L303
-.L299:
+	bgt	.L337
+.L333:
 	@ sp needed
 	pop	{r7}
 	mov	r8, r7
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L316:
+.L350:
 	.align	2
-.L315:
+.L349:
 	.word	gPlaySt
 	.word	GetUnit
 	.size	REW_undoPhaseChange, .-REW_undoPhaseChange
@@ -2124,52 +2377,52 @@ REW_redoPhaseChange:
 	movs	r5, r0
 	ldrb	r3, [r0, #1]
 	movs	r0, #63
-	ldr	r1, .L333
+	ldr	r1, .L367
 	lsls	r2, r3, #4
 	bics	r2, r0
 	strb	r2, [r1, #15]
 	lsls	r3, r3, #27
-	bpl	.L318
+	bpl	.L352
 	ldrh	r3, [r1, #16]
 	adds	r3, r3, #1
 	strh	r3, [r1, #16]
-.L318:
+.L352:
 	ldrh	r3, [r5, #2]
 	cmp	r3, #4
-	bls	.L317
+	bls	.L351
 	movs	r3, #66
 	movs	r4, #0
 	mov	r8, r3
-	ldr	r6, .L333+4
+	ldr	r6, .L367+4
 	adds	r7, r5, #4
-.L321:
+.L355:
 	ldrb	r0, [r7, r4]
 	bl	.L11
 	cmp	r0, #0
-	beq	.L320
+	beq	.L354
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L320
+	beq	.L354
 	mov	r2, r8
 	ldr	r3, [r0, #12]
 	bics	r3, r2
 	str	r3, [r0, #12]
-.L320:
+.L354:
 	ldrh	r3, [r5, #2]
 	adds	r4, r4, #1
 	subs	r3, r3, #4
 	cmp	r3, r4
-	bgt	.L321
-.L317:
+	bgt	.L355
+.L351:
 	@ sp needed
 	pop	{r7}
 	mov	r8, r7
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L334:
+.L368:
 	.align	2
-.L333:
+.L367:
 	.word	gPlaySt
 	.word	GetUnit
 	.size	REW_redoPhaseChange, .-REW_redoPhaseChange
@@ -2187,38 +2440,38 @@ REW_nextPhase:
 	push	{r4, r5, r6, lr}
 	movs	r4, r2
 	cmp	r0, #0
-	beq	.L338
+	beq	.L372
 	cmp	r0, #128
-	bne	.L340
+	bne	.L374
 	movs	r0, #64
 	movs	r5, #64
-.L336:
-	ldr	r3, .L341
+.L370:
+	ldr	r3, .L375
 	bl	.L5
 	cmp	r0, #0
-	bne	.L337
+	bne	.L371
 	movs	r3, #1
 	strb	r3, [r4]
-.L337:
+.L371:
 	@ sp needed
 	movs	r0, r5
 	pop	{r4, r5, r6}
 	pop	{r1}
 	bx	r1
-.L340:
+.L374:
 	ldrb	r3, [r1]
 	adds	r3, r3, #1
 	movs	r0, #0
 	movs	r5, #0
 	strb	r3, [r1]
-	b	.L336
-.L338:
+	b	.L370
+.L372:
 	movs	r0, #128
 	movs	r5, #128
-	b	.L336
-.L342:
+	b	.L370
+.L376:
 	.align	2
-.L341:
+.L375:
 	.word	GetPhaseAbleUnitCount
 	.size	REW_nextPhase, .-REW_nextPhase
 	.align	1
@@ -2238,27 +2491,27 @@ REW_actionPhaseChangeStart:
 	mov	lr, fp
 	mov	r7, r10
 	push	{r5, r6, r7, lr}
-	ldr	r6, .L369
+	ldr	r6, .L403
 	ldrb	r5, [r6, #15]
 	cmp	r5, #0
-	beq	.L353
+	beq	.L387
 	cmp	r5, #128
-	bne	.L368
+	bne	.L402
 	movs	r0, #64
 	movs	r7, #4
 	movs	r5, #0
-.L344:
-	ldr	r3, .L369+4
+.L378:
+	ldr	r3, .L403+4
 	bl	.L5
-	ldr	r3, .L369+8
+	ldr	r3, .L403+8
 	ldr	r2, [r3]
 	mov	fp, r3
 	ldrh	r3, [r2, #2]
 	cmp	r3, #0
-	bne	.L346
+	bne	.L380
 	adds	r3, r3, #4
 	strh	r3, [r2, #2]
-.L346:
+.L380:
 	mov	r8, r2
 	add	r8, r8, r3
 	mov	r2, r8
@@ -2275,36 +2528,36 @@ REW_actionPhaseChangeStart:
 	orrs	r7, r3
 	strb	r7, [r2, #1]
 	cmp	r0, #0
-	bne	.L347
+	bne	.L381
 	movs	r2, #32
 	lsls	r3, r7, #24
 	lsrs	r3, r3, #24
 	orrs	r3, r2
 	mov	r2, r8
 	strb	r3, [r2, #1]
-.L347:
+.L381:
 	movs	r3, #0
 	mov	r9, r3
 	adds	r3, r3, #2
 	movs	r5, #1
 	mov	r10, r3
-	ldr	r7, .L369+12
-	b	.L351
-.L349:
+	ldr	r7, .L403+12
+	b	.L385
+.L383:
 	ldrb	r4, [r6, #15]
-.L351:
+.L385:
 	adds	r4, r4, r5
 	movs	r0, r4
 	bl	.L7
 	cmp	r0, #0
-	beq	.L348
+	beq	.L382
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L348
+	beq	.L382
 	mov	r2, r10
 	ldr	r3, [r0, #12]
 	tst	r3, r2
-	beq	.L348
+	beq	.L382
 	mov	r3, r8
 	add	r3, r3, r9
 	strb	r4, [r3, #4]
@@ -2316,10 +2569,10 @@ REW_actionPhaseChangeStart:
 	movs	r3, #1
 	mov	ip, r3
 	add	r9, r9, ip
-.L348:
+.L382:
 	adds	r5, r5, #1
 	cmp	r5, #64
-	bne	.L349
+	bne	.L383
 	mov	r3, fp
 	mov	r1, r8
 	ldr	r2, [r3]
@@ -2332,12 +2585,12 @@ REW_actionPhaseChangeStart:
 	lsrs	r3, r3, #16
 	ands	r0, r3
 	tst	r1, r3
-	beq	.L352
+	beq	.L386
 	adds	r3, r3, #4
 	subs	r3, r3, r0
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L352:
+.L386:
 	strh	r3, [r2, #2]
 	@ sp needed
 	pop	{r4, r5, r6, r7}
@@ -2348,18 +2601,18 @@ REW_actionPhaseChangeStart:
 	pop	{r3, r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L368:
+.L402:
 	movs	r0, #0
 	movs	r7, #0
 	movs	r5, #1
-	b	.L344
-.L353:
+	b	.L378
+.L387:
 	movs	r0, #128
 	movs	r7, #8
-	b	.L344
-.L370:
+	b	.L378
+.L404:
 	.align	2
-.L369:
+.L403:
 	.word	gPlaySt
 	.word	GetPhaseAbleUnitCount
 	.word	REW_curSequence
@@ -2382,58 +2635,58 @@ REW_actionPhaseChangeSuppports:
 	mov	r6, r9
 	mov	r5, r8
 	push	{r5, r6, r7, lr}
-	ldr	r3, .L401
+	ldr	r3, .L435
 	ldrh	r2, [r3, #16]
 	sub	sp, sp, #36
 	cmp	r2, #1
-	bne	.LCB2526
-	b	.L371	@long jump
-.LCB2526:
+	bne	.LCB2804
+	b	.L405	@long jump
+.LCB2804:
 	ldrb	r3, [r3, #20]
 	cmp	r3, #127
-	bls	.LCB2529
-	b	.L371	@long jump
-.LCB2529:
-	ldr	r3, .L401+4
+	bls	.LCB2807
+	b	.L405	@long jump
+.LCB2807:
+	ldr	r3, .L435+4
 	mov	r9, r3
-	ldr	r3, .L401+8
-	ldr	r2, .L401+12
+	ldr	r3, .L435+8
+	ldr	r2, .L435+12
 	str	r3, [sp, #8]
-	ldr	r3, .L401+16
+	ldr	r3, .L435+16
 	movs	r7, #1
 	mov	r10, r3
 	str	r2, [sp, #28]
-	b	.L389
-.L375:
+	b	.L423
+.L409:
 	adds	r7, r7, #1
 	cmp	r7, #64
-	bne	.LCB2546
-	b	.L371	@long jump
-.LCB2546:
-.L389:
+	bne	.LCB2824
+	b	.L405	@long jump
+.LCB2824:
+.L423:
 	movs	r0, r7
 	bl	.L9
 	subs	r4, r0, #0
-	beq	.L375
+	beq	.L409
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L375
+	beq	.L409
 	ldr	r2, [r0, #12]
-	ldr	r3, .L401+20
+	ldr	r3, .L435+20
 	tst	r2, r3
-	bne	.L375
+	bne	.L409
 	ldr	r3, [sp, #8]
 	bl	.L5
 	cmp	r0, #4
-	bgt	.L375
+	bgt	.L409
 	mov	r3, r10
 	ldr	r2, [r3]
 	ldrh	r3, [r2, #2]
 	cmp	r3, #0
-	bne	.L378
+	bne	.L412
 	adds	r3, r3, #4
 	strh	r3, [r2, #2]
-.L378:
+.L412:
 	adds	r3, r2, r3
 	movs	r2, r3
 	str	r3, [sp, #12]
@@ -2445,32 +2698,32 @@ REW_actionPhaseChangeSuppports:
 	ldr	r3, [sp, #28]
 	bl	.L5
 	cmp	r0, #0
-	ble	.L387
+	ble	.L421
 	movs	r3, #0
 	str	r3, [sp, #20]
-	ldr	r3, .L401+20
+	ldr	r3, .L435+20
 	str	r7, [sp, #16]
 	movs	r5, #0
 	mov	r8, r3
 	movs	r7, r0
-	ldr	r6, .L401+24
-.L379:
+	ldr	r6, .L435+24
+.L413:
 	movs	r1, r5
 	movs	r0, r4
 	bl	.L11
 	cmp	r0, #0
-	beq	.L383
+	beq	.L417
 	mov	r3, r8
 	ldr	r1, [r0, #12]
 	tst	r1, r3
-	bne	.L383
+	bne	.L417
 	movs	r3, #11
 	ldrsb	r3, [r0, r3]
 	mov	ip, r3
 	movs	r3, #192
 	mov	r2, ip
 	tst	r3, r2
-	bne	.L383
+	bne	.L417
 	movs	r3, #16
 	movs	r2, #16
 	ldrsb	r3, [r4, r3]
@@ -2493,23 +2746,23 @@ REW_actionPhaseChangeSuppports:
 	ldr	r3, [sp, #4]
 	adds	r3, r3, r2
 	cmp	r3, #0
-	beq	.L384
+	beq	.L418
 	cmp	r3, #1
-	bne	.L383
+	bne	.L417
 	ldr	r3, [r4, #12]
 	orrs	r1, r3
 	lsls	r1, r1, #26
-	bpl	.L386
-.L383:
+	bpl	.L420
+.L417:
 	adds	r5, r5, #1
 	cmp	r7, r5
-	bne	.L379
+	bne	.L413
 	ldr	r7, [sp, #16]
-.L387:
+.L421:
 	ldr	r3, [sp, #12]
 	ldrh	r3, [r3, #2]
 	cmp	r3, #4
-	bls	.L375
+	bls	.L409
 	movs	r2, #66
 	ldr	r1, [sp, #12]
 	strb	r2, [r1]
@@ -2524,17 +2777,17 @@ REW_actionPhaseChangeSuppports:
 	lsrs	r3, r3, #16
 	ands	r0, r3
 	tst	r1, r3
-	beq	.L400
+	beq	.L434
 	adds	r3, r3, #4
 	subs	r3, r3, r0
-.L400:
+.L434:
 	adds	r7, r7, #1
 	strh	r3, [r2, #2]
 	cmp	r7, #64
-	beq	.LCB2683
-	b	.L389	@long jump
-.LCB2683:
-.L371:
+	beq	.LCB2961
+	b	.L423	@long jump
+.LCB2961:
+.L405:
 	add	sp, sp, #36
 	@ sp needed
 	pop	{r4, r5, r6, r7}
@@ -2545,15 +2798,15 @@ REW_actionPhaseChangeSuppports:
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L384:
+.L418:
 	ldrb	r3, [r4, #27]
 	cmp	ip, r3
-	bne	.L383
-.L386:
+	bne	.L417
+.L420:
 	ldr	r3, [sp, #8]
 	bl	.L5
 	cmp	r0, #4
-	bgt	.L383
+	bgt	.L417
 	movs	r3, #50
 	mov	fp, r3
 	add	fp, fp, r4
@@ -2561,14 +2814,14 @@ REW_actionPhaseChangeSuppports:
 	ldrb	r0, [r3, r5]
 	movs	r1, r5
 	str	r0, [sp, #4]
-	ldr	r3, .L401+28
+	ldr	r3, .L435+28
 	movs	r0, r4
 	bl	.L5
 	mov	r3, fp
 	ldr	r0, [sp, #4]
 	ldrb	r3, [r3, r5]
 	cmp	r0, r3
-	beq	.L383
+	beq	.L417
 	ldr	r1, [sp, #24]
 	mov	ip, r1
 	movs	r1, r5
@@ -2586,10 +2839,10 @@ REW_actionPhaseChangeSuppports:
 	strh	r3, [r1, #2]
 	adds	r3, r2, #1
 	str	r3, [sp, #20]
-	b	.L383
-.L402:
+	b	.L417
+.L436:
 	.align	2
-.L401:
+.L435:
 	.word	gPlaySt
 	.word	GetUnit
 	.word	GetUnitTotalSupportLevel
@@ -2614,41 +2867,41 @@ REW_actionPhaseChangeTrackStatus:
 	mov	lr, r10
 	mov	r6, r8
 	mov	r7, r9
-	ldr	r3, .L414
+	ldr	r3, .L448
 	ldr	r4, [r3]
 	movs	r3, #0
 	push	{r6, r7, lr}
-	ldr	r5, .L414+4
+	ldr	r5, .L448+4
 	sub	sp, sp, #8
 	ldrb	r6, [r5, #15]
 	movs	r1, r4
 	str	r3, [sp, #4]
-	ldr	r2, .L414+8
-	ldr	r3, .L414+12
+	ldr	r2, .L448+8
+	ldr	r3, .L448+12
 	add	r0, sp, #4
 	bl	.L5
 	ldrb	r5, [r5, #15]
 	adds	r6, r6, #64
 	adds	r5, r5, #1
 	cmp	r6, r5
-	ble	.L404
+	ble	.L438
 	lsls	r3, r5, #3
 	adds	r4, r4, r3
-	ldr	r3, .L414+16
+	ldr	r3, .L448+16
 	mov	r9, r3
 	movs	r3, #19
 	mov	r10, r3
 	adds	r3, r3, #29
 	mov	r8, r3
 	movs	r7, #49
-.L406:
+.L440:
 	movs	r0, r5
 	bl	.L9
 	cmp	r0, #0
-	beq	.L405
+	beq	.L439
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L405
+	beq	.L439
 	mov	r3, r10
 	strb	r3, [r4]
 	ldrb	r3, [r0, #19]
@@ -2664,13 +2917,13 @@ REW_actionPhaseChangeTrackStatus:
 	strb	r3, [r4, #6]
 	ldrb	r3, [r0, #11]
 	strb	r3, [r4, #7]
-.L405:
+.L439:
 	adds	r5, r5, #1
 	adds	r4, r4, #8
 	cmp	r6, r5
-	bgt	.L406
-.L404:
-	ldr	r3, .L414+20
+	bgt	.L440
+.L438:
+	ldr	r3, .L448+20
 	bl	.L5
 	add	sp, sp, #8
 	@ sp needed
@@ -2681,9 +2934,9 @@ REW_actionPhaseChangeTrackStatus:
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L415:
+.L449:
 	.align	2
-.L414:
+.L448:
 	.word	REW_rewindBuffer
 	.word	gPlaySt
 	.word	16777344
@@ -2708,8 +2961,8 @@ REW_actionPhaseChangeRecordStatus:
 	mov	r6, r9
 	mov	r5, r8
 	push	{r5, r6, r7, lr}
-	ldr	r3, .L432
-	ldr	r2, .L432+4
+	ldr	r3, .L466
+	ldr	r2, .L466+4
 	ldrb	r3, [r3, #15]
 	ldr	r7, [r2]
 	adds	r4, r3, #1
@@ -2719,29 +2972,29 @@ REW_actionPhaseChangeRecordStatus:
 	movs	r2, #64
 	mov	fp, r2
 	add	fp, fp, r3
-	ldr	r3, .L432+8
+	ldr	r3, .L466+8
 	sub	sp, sp, #28
 	str	r3, [sp, #20]
-	ldr	r3, .L432+12
+	ldr	r3, .L466+12
 	mov	r10, r3
-.L425:
+.L459:
 	movs	r0, r4
 	ldr	r3, [sp, #20]
 	bl	.L5
 	cmp	r0, #0
-	beq	.L418
+	beq	.L452
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L418
+	beq	.L452
 	mov	r3, r10
 	ldr	r1, [r3]
 	ldrh	r5, [r1, #2]
 	subs	r3, r5, #0
-	bne	.L421
+	bne	.L455
 	movs	r3, #4
 	movs	r5, #4
 	strh	r3, [r1, #2]
-.L421:
+.L455:
 	mov	r8, r3
 	add	r8, r8, r1
 	mov	r3, r8
@@ -2759,13 +3012,13 @@ REW_actionPhaseChangeRecordStatus:
 	str	r4, [sp, #12]
 	str	r0, [sp, #4]
 	subs	r3, r3, #8
-.L423:
+.L457:
 	ldrb	r0, [r3]
 	ldr	r1, [sp, #4]
 	ldrb	r6, [r3, #1]
 	ldrb	r1, [r1, r0]
 	cmp	r1, r6
-	beq	.L422
+	beq	.L456
 	lsls	r4, r5, #1
 	add	r4, r4, r9
 	subs	r1, r1, r6
@@ -2777,16 +3030,16 @@ REW_actionPhaseChangeRecordStatus:
 	strb	r0, [r4]
 	strh	r2, [r1, #2]
 	adds	r5, r5, #1
-.L422:
+.L456:
 	adds	r3, r3, #2
 	cmp	ip, r3
-	bne	.L423
+	bne	.L457
 	mov	r7, ip
 	ldr	r1, [sp, #8]
 	ldr	r4, [sp, #12]
 	ldr	r5, [sp, #16]
 	cmp	r2, #4
-	bls	.L418
+	bls	.L452
 	mov	r3, r8
 	movs	r0, #66
 	strb	r4, [r3, #1]
@@ -2798,16 +3051,16 @@ REW_actionPhaseChangeRecordStatus:
 	lsrs	r5, r5, #16
 	ands	r2, r5
 	tst	r3, r5
-	beq	.L431
+	beq	.L465
 	adds	r5, r5, #4
 	subs	r5, r5, r2
-.L431:
+.L465:
 	strh	r5, [r1, #2]
-.L418:
+.L452:
 	adds	r4, r4, #1
 	adds	r7, r7, #8
 	cmp	r4, fp
-	bne	.L425
+	bne	.L459
 	add	sp, sp, #28
 	@ sp needed
 	pop	{r4, r5, r6, r7}
@@ -2818,9 +3071,9 @@ REW_actionPhaseChangeRecordStatus:
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L433:
+.L467:
 	.align	2
-.L432:
+.L466:
 	.word	gPlaySt
 	.word	REW_rewindBuffer
 	.word	GetUnit
@@ -2838,24 +3091,24 @@ REW_undoLoadUnit:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L442
+	ldr	r3, .L476
 	ldrb	r0, [r0, #1]
 	bl	.L5
 	cmp	r0, #0
-	beq	.L434
+	beq	.L468
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L434
-	ldr	r3, .L442+4
+	beq	.L468
+	ldr	r3, .L476+4
 	bl	.L5
-.L434:
+.L468:
 	@ sp needed
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L443:
+.L477:
 	.align	2
-.L442:
+.L476:
 	.word	GetUnit
 	.word	ClearUnit
 	.size	REW_undoLoadUnit, .-REW_undoLoadUnit
@@ -2871,16 +3124,16 @@ REW_redoLoadUnit:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L445
+	ldr	r3, .L479
 	@ sp needed
 	adds	r0, r0, #4
 	bl	.L5
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L446:
+.L480:
 	.align	2
-.L445:
+.L479:
 	.word	LoadUnit
 	.size	REW_redoLoadUnit, .-REW_redoLoadUnit
 	.align	1
@@ -2895,18 +3148,18 @@ REW_conseqInitUnit:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, lr}
-	ldr	r6, .L457
+	ldr	r6, .L491
 	ldr	r5, [r6]
 	movs	r4, r0
 	ldrh	r3, [r5, #2]
 	movs	r0, r1
 	cmp	r4, #0
-	beq	.L447
+	beq	.L481
 	cmp	r3, #0
-	beq	.L447
+	beq	.L481
 	ldr	r2, [r4]
 	cmp	r2, #0
-	beq	.L447
+	beq	.L481
 	adds	r5, r5, r3
 	movs	r3, #67
 	strb	r3, [r5]
@@ -2916,7 +3169,7 @@ REW_conseqInitUnit:
 	movs	r2, #10
 	strh	r3, [r5, #2]
 	adds	r1, r5, #4
-	ldr	r3, .L457+4
+	ldr	r3, .L491+4
 	bl	.L5
 	movs	r3, #63
 	ldrb	r2, [r4, #17]
@@ -2940,19 +3193,19 @@ REW_conseqInitUnit:
 	lsrs	r3, r3, #16
 	ands	r0, r3
 	tst	r2, r3
-	beq	.L456
+	beq	.L490
 	adds	r3, r3, #4
 	subs	r3, r3, r0
-.L456:
+.L490:
 	strh	r3, [r1, #2]
-.L447:
+.L481:
 	@ sp needed
 	pop	{r4, r5, r6}
 	pop	{r0}
 	bx	r0
-.L458:
+.L492:
 	.align	2
-.L457:
+.L491:
 	.word	REW_curSequence
 	.word	CpuSet
 	.size	REW_conseqInitUnit, .-REW_conseqInitUnit
@@ -2968,50 +3221,50 @@ REW_conseqFinalizeUnits:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r3, r4, r5, r6, r7, lr}
-	ldr	r6, .L480
+	ldr	r6, .L514
 	ldr	r4, [r6]
 	ldrh	r3, [r4, #2]
 	cmp	r3, #0
-	beq	.L459
+	beq	.L493
 	movs	r5, #3
-	ldr	r7, .L480+4
+	ldr	r7, .L514+4
 	adds	r4, r4, #4
-.L465:
+.L499:
 	ldrb	r3, [r4]
 	cmp	r3, #67
-	beq	.L479
-.L462:
+	beq	.L513
+.L496:
 	movs	r1, r5
 	ldrh	r3, [r4, #2]
 	ldr	r2, [r6]
 	ands	r1, r3
 	tst	r5, r3
-	beq	.L464
+	beq	.L498
 	adds	r3, r3, #4
 	subs	r3, r3, r1
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L464:
+.L498:
 	adds	r4, r4, r3
 	ldrh	r3, [r2, #2]
 	adds	r2, r2, r3
 	cmp	r4, r2
-	bcs	.L459
+	bcs	.L493
 	cmp	r4, #0
-	bne	.L465
-.L459:
+	bne	.L499
+.L493:
 	@ sp needed
 	pop	{r3, r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L479:
+.L513:
 	ldrb	r0, [r4, #1]
 	bl	.L7
 	cmp	r0, #0
-	beq	.L462
+	beq	.L496
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L462
+	beq	.L496
 	movs	r3, #68
 	movs	r2, #63
 	strb	r3, [r4]
@@ -3021,17 +3274,17 @@ REW_conseqFinalizeUnits:
 	lsls	r3, r3, #6
 	ands	r2, r1
 	orrs	r3, r2
-	ldr	r1, .L480+8
+	ldr	r1, .L514+8
 	ldr	r2, [r4, #8]
 	ands	r2, r1
 	orrs	r3, r2
 	str	r3, [r4, #8]
 	movs	r3, #0
 	str	r3, [r4, #12]
-	b	.L462
-.L481:
+	b	.L496
+.L515:
 	.align	2
-.L480:
+.L514:
 	.word	REW_curSequence
 	.word	GetUnit
 	.word	16773120
@@ -3047,16 +3300,16 @@ REW_findCurSequence:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L483
+	ldr	r3, .L517
 	push	{r4, lr}
 	ldrh	r4, [r3, #12]
 	@ sp needed
 	movs	r3, #224
 	lsls	r3, r3, #20
 	mov	ip, r3
-	ldr	r0, .L483+4
+	ldr	r0, .L517+4
 	lsls	r0, r0, #16
-	ldr	r3, .L483+8
+	ldr	r3, .L517+8
 	lsrs	r0, r0, #16
 	add	r4, r4, ip
 	bl	.L5
@@ -3065,9 +3318,9 @@ REW_findCurSequence:
 	pop	{r4}
 	pop	{r1}
 	bx	r1
-.L484:
+.L518:
 	.align	2
-.L483:
+.L517:
 	.word	gSaveBlockDecl
 	.word	EMS_CHUNK_REWIND_SEQ
 	.word	MS_FindSuspendSaveChunk
@@ -3083,36 +3336,36 @@ REW_clearCurSequence:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L486
+	ldr	r3, .L520
 	push	{r4, r5, r6, lr}
 	ldr	r5, [r3]
 	@ sp needed
 	movs	r3, #0
 	strh	r3, [r5]
 	strh	r3, [r5, #2]
-	ldr	r3, .L486+4
+	ldr	r3, .L520+4
 	ldrh	r4, [r3, #12]
 	movs	r3, #224
 	lsls	r3, r3, #20
 	mov	ip, r3
-	ldr	r0, .L486+8
+	ldr	r0, .L520+8
 	lsls	r0, r0, #16
-	ldr	r3, .L486+12
+	ldr	r3, .L520+12
 	lsrs	r0, r0, #16
 	add	r4, r4, ip
 	bl	.L5
 	ldrh	r1, [r0]
 	movs	r2, #4
 	movs	r0, r5
-	ldr	r3, .L486+16
+	ldr	r3, .L520+16
 	adds	r1, r4, r1
 	bl	.L5
 	pop	{r4, r5, r6}
 	pop	{r0}
 	bx	r0
-.L487:
+.L521:
 	.align	2
-.L486:
+.L520:
 	.word	REW_curSequence
 	.word	gSaveBlockDecl
 	.word	EMS_CHUNK_REWIND_SEQ
@@ -3130,16 +3383,16 @@ REW_findRewindBuf:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L489
+	ldr	r3, .L523
 	push	{r4, lr}
 	ldrh	r4, [r3, #12]
 	@ sp needed
 	movs	r3, #224
 	lsls	r3, r3, #20
 	mov	ip, r3
-	ldr	r0, .L489+4
+	ldr	r0, .L523+4
 	lsls	r0, r0, #16
-	ldr	r3, .L489+8
+	ldr	r3, .L523+8
 	lsrs	r0, r0, #16
 	add	r4, r4, ip
 	bl	.L5
@@ -3148,9 +3401,9 @@ REW_findRewindBuf:
 	pop	{r4}
 	pop	{r1}
 	bx	r1
-.L490:
+.L524:
 	.align	2
-.L489:
+.L523:
 	.word	gSaveBlockDecl
 	.word	EMS_CHUNK_REWIND_BUF
 	.word	MS_FindSuspendSaveChunk
@@ -3170,20 +3423,20 @@ REW_clearRewindBuf:
 	push	{r4, lr}
 	sub	sp, sp, #8
 	str	r3, [sp, #4]
-	ldr	r3, .L492
+	ldr	r3, .L526
 	ldrh	r4, [r3, #12]
 	movs	r3, #224
 	lsls	r3, r3, #20
 	mov	ip, r3
-	ldr	r0, .L492+4
+	ldr	r0, .L526+4
 	lsls	r0, r0, #16
-	ldr	r3, .L492+8
+	ldr	r3, .L526+8
 	lsrs	r0, r0, #16
 	add	r4, r4, ip
 	bl	.L5
 	ldrh	r1, [r0]
 	movs	r2, #4
-	ldr	r3, .L492+12
+	ldr	r3, .L526+12
 	adds	r1, r4, r1
 	add	r0, sp, #4
 	bl	.L5
@@ -3192,9 +3445,9 @@ REW_clearRewindBuf:
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L493:
+.L527:
 	.align	2
-.L492:
+.L526:
 	.word	gSaveBlockDecl
 	.word	EMS_CHUNK_REWIND_BUF
 	.word	MS_FindSuspendSaveChunk
@@ -3212,30 +3465,30 @@ REW_cpPhaseChangeSave:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L496
+	ldr	r3, .L530
 	movs	r4, r0
 	ldrb	r0, [r3, #15]
-	ldr	r3, .L496+4
+	ldr	r3, .L530+4
 	bl	.L5
 	cmp	r0, #0
-	ble	.L495
+	ble	.L529
 	movs	r2, #2
-	ldr	r3, .L496+8
+	ldr	r3, .L530+8
 	movs	r0, #3
 	strb	r2, [r3, #22]
-	ldr	r3, .L496+12
+	ldr	r3, .L530+12
 	bl	.L5
-.L495:
+.L529:
 	@ sp needed
 	movs	r0, r4
-	ldr	r3, .L496+16
+	ldr	r3, .L530+16
 	bl	.L5
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L497:
+.L531:
 	.align	2
-.L496:
+.L530:
 	.word	gPlaySt
 	.word	GetPhaseAbleUnitCount
 	.word	gActionData
@@ -3254,7 +3507,7 @@ REW_loadActiveUnitMoveOrigin:
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L499
+	ldr	r3, .L533
 	sub	sp, sp, #8
 	add	r4, sp, #4
 	movs	r2, r1
@@ -3262,7 +3515,7 @@ REW_loadActiveUnitMoveOrigin:
 	movs	r1, r4
 	bl	.L5
 	movs	r2, #0
-	ldr	r3, .L499+4
+	ldr	r3, .L533+4
 	ldrsb	r2, [r4, r2]
 	strh	r2, [r3]
 	movs	r2, #1
@@ -3273,9 +3526,9 @@ REW_loadActiveUnitMoveOrigin:
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L500:
+.L534:
 	.align	2
-.L499:
+.L533:
 	.word	ReadSramFast
 	.word	gActiveUnitMoveOrigin
 	.size	REW_loadActiveUnitMoveOrigin, .-REW_loadActiveUnitMoveOrigin
@@ -3293,7 +3546,7 @@ REW_saveActiveUnitMoveOrigin:
 	movs	r3, r0
 	push	{r4, lr}
 	movs	r2, r1
-	ldr	r1, .L502
+	ldr	r1, .L536
 	sub	sp, sp, #8
 	ldrh	r4, [r1]
 	add	r0, sp, #4
@@ -3301,16 +3554,16 @@ REW_saveActiveUnitMoveOrigin:
 	ldrh	r1, [r1, #2]
 	strb	r1, [r0, #1]
 	movs	r1, r3
-	ldr	r3, .L502+4
+	ldr	r3, .L536+4
 	bl	.L5
 	add	sp, sp, #8
 	@ sp needed
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L503:
+.L537:
 	.align	2
-.L502:
+.L536:
 	.word	gActiveUnitMoveOrigin
 	.word	WriteAndVerifySramFast
 	.size	REW_saveActiveUnitMoveOrigin, .-REW_saveActiveUnitMoveOrigin
@@ -3325,20 +3578,20 @@ REW_loadCurSequence:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L505
+	ldr	r3, .L539
 	push	{r4, lr}
 	movs	r2, r1
 	@ sp needed
 	ldr	r1, [r3]
-	ldr	r3, .L505+4
+	ldr	r3, .L539+4
 	ldr	r3, [r3]
 	bl	.L5
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L506:
+.L540:
 	.align	2
-.L505:
+.L539:
 	.word	REW_curSequence
 	.word	ReadSramFast
 	.size	REW_loadCurSequence, .-REW_loadCurSequence
@@ -3355,26 +3608,26 @@ REW_saveCurSequence:
 	@ frame_needed = 0, uses_anonymous_args = 0
 	movs	r2, #8
 	push	{r4, lr}
-	ldr	r3, .L509
+	ldr	r3, .L543
 	ldrb	r3, [r3, #22]
 	bics	r3, r2
 	cmp	r3, #1
-	bne	.L507
-	ldr	r3, .L509+4
+	bne	.L541
+	ldr	r3, .L543+4
 	ldr	r3, [r3]
 	movs	r2, r1
 	movs	r1, r0
 	movs	r0, r3
-	ldr	r3, .L509+8
+	ldr	r3, .L543+8
 	bl	.L5
-.L507:
+.L541:
 	@ sp needed
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L510:
+.L544:
 	.align	2
-.L509:
+.L543:
 	.word	gActionData
 	.word	REW_curSequence
 	.word	WriteAndVerifySramFast
@@ -3390,20 +3643,20 @@ REW_loadRewind:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L512
+	ldr	r3, .L546
 	push	{r4, lr}
 	movs	r2, r1
 	@ sp needed
 	ldr	r1, [r3]
-	ldr	r3, .L512+4
+	ldr	r3, .L546+4
 	ldr	r3, [r3]
 	bl	.L5
 	pop	{r4}
 	pop	{r0}
 	bx	r0
-.L513:
+.L547:
 	.align	2
-.L512:
+.L546:
 	.word	REW_rewindBuffer
 	.word	ReadSramFast
 	.size	REW_loadRewind, .-REW_loadRewind
@@ -3422,24 +3675,24 @@ REW_saveRewind:
 	mov	r7, r8
 	mov	lr, r9
 	push	{r7, lr}
-	ldr	r7, .L524
+	ldr	r7, .L558
 	ldr	r3, [r7]
 	ldrh	r3, [r3, #2]
 	movs	r5, r0
 	movs	r6, r1
 	cmp	r3, #0
-	beq	.L514
+	beq	.L548
 	movs	r2, #8
-	ldr	r3, .L524+4
+	ldr	r3, .L558+4
 	ldrb	r3, [r3, #22]
 	mov	r9, r2
 	bics	r3, r2
 	cmp	r3, #1
-	beq	.L514
-	ldr	r3, .L524+8
+	beq	.L548
+	ldr	r3, .L558+8
 	mov	r8, r3
 	ldr	r1, [r3]
-	ldr	r3, .L524+12
+	ldr	r3, .L558+12
 	movs	r2, r6
 	ldr	r3, [r3]
 	bl	.L5
@@ -3447,17 +3700,17 @@ REW_saveRewind:
 	ldr	r4, [r3]
 	ldr	r3, [r4]
 	cmp	r3, #0
-	beq	.L516
+	beq	.L550
 	ldr	r2, [r4, #4]
 	ldrh	r2, [r2, #2]
-.L517:
+.L551:
 	adds	r4, r4, r3
 	ldr	r1, [r7]
 	strh	r2, [r4]
 	ldrh	r2, [r1, #2]
 	adds	r0, r4, #4
 	strh	r2, [r4, #2]
-	ldr	r3, .L524+16
+	ldr	r3, .L558+16
 	subs	r2, r2, #4
 	adds	r1, r1, #4
 	bl	.L5
@@ -3470,20 +3723,20 @@ REW_saveRewind:
 	movs	r2, r6
 	str	r3, [r0]
 	str	r4, [r0, #4]
-	ldr	r6, .L524+20
+	ldr	r6, .L558+20
 	bl	.L11
 	movs	r3, #0
 	ldr	r5, [r7]
 	strh	r3, [r5, #2]
 	strh	r3, [r5]
-	ldr	r3, .L524+24
+	ldr	r3, .L558+24
 	ldrh	r4, [r3, #12]
 	movs	r3, #224
 	lsls	r3, r3, #20
 	mov	ip, r3
-	ldr	r0, .L524+28
+	ldr	r0, .L558+28
 	lsls	r0, r0, #16
-	ldr	r3, .L524+32
+	ldr	r3, .L558+32
 	lsrs	r0, r0, #16
 	add	r4, r4, ip
 	bl	.L5
@@ -3492,7 +3745,7 @@ REW_saveRewind:
 	movs	r0, r5
 	adds	r1, r4, r1
 	bl	.L11
-.L514:
+.L548:
 	@ sp needed
 	pop	{r6, r7}
 	mov	r9, r7
@@ -3500,15 +3753,15 @@ REW_saveRewind:
 	pop	{r3, r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L516:
+.L550:
 	mov	r3, r9
 	movs	r2, #0
 	str	r3, [r4]
 	movs	r3, #8
-	b	.L517
-.L525:
+	b	.L551
+.L559:
 	.align	2
-.L524:
+.L558:
 	.word	REW_curSequence
 	.word	gActionData
 	.word	REW_rewindBuffer
@@ -3530,18 +3783,18 @@ REW_rewindMenuUsability:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L529
+	ldr	r3, .L563
 	push	{r4, r5, lr}
 	ldr	r5, [r3]
-	ldr	r3, .L529+4
+	ldr	r3, .L563+4
 	ldrh	r4, [r3, #12]
 	movs	r3, #224
 	lsls	r3, r3, #20
 	mov	ip, r3
-	ldr	r0, .L529+8
+	ldr	r0, .L563+8
 	lsls	r0, r0, #16
 	sub	sp, sp, #12
-	ldr	r3, .L529+12
+	ldr	r3, .L563+12
 	lsrs	r0, r0, #16
 	add	r4, r4, ip
 	bl	.L5
@@ -3560,9 +3813,9 @@ REW_rewindMenuUsability:
 	pop	{r4, r5}
 	pop	{r1}
 	bx	r1
-.L530:
+.L564:
 	.align	2
-.L529:
+.L563:
 	.word	ReadSramFast
 	.word	gSaveBlockDecl
 	.word	EMS_CHUNK_REWIND_BUF
@@ -3580,12 +3833,12 @@ REW_rewindMenuEffect:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L532
+	ldr	r3, .L566
 	@ sp needed
 	bl	.L5
-	ldr	r3, .L532+4
+	ldr	r3, .L566+4
 	movs	r1, #3
-	ldr	r0, .L532+8
+	ldr	r0, .L566+8
 	bl	.L5
 	movs	r3, #0
 	str	r3, [r0, #80]
@@ -3594,9 +3847,9 @@ REW_rewindMenuEffect:
 	pop	{r4}
 	pop	{r1}
 	bx	r1
-.L533:
+.L567:
 	.align	2
-.L532:
+.L566:
 	.word	LockGame
 	.word	Proc_Start
 	.word	.LANCHOR0
@@ -3610,44 +3863,57 @@ REW_rewindMenuEffect:
 	.type	REW_displayActor, %function
 REW_displayActor:
 	@ Function supports interworking.
-	@ args = 0, pretend = 0, frame = 0
+	@ args = 0, pretend = 0, frame = 72
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, lr}
-	ldr	r3, .L535
-	sub	sp, sp, #12
-	movs	r5, r0
+	mov	lr, r8
+	push	{lr}
+	ldr	r3, .L573
+	movs	r6, r0
+	sub	sp, sp, #80
 	ldrb	r0, [r1, #1]
-	movs	r6, r2
+	movs	r5, r1
+	movs	r7, r2
+	mov	r8, r3
 	bl	.L5
-	ldr	r3, [r0, #4]
-	ldrb	r7, [r3, #4]
-	ldr	r3, [r0]
 	movs	r4, r0
+	ldrb	r0, [r5, #1]
+	cmp	r0, #255
+	beq	.L571
+	movs	r3, #63
+	movs	r2, r0
+	bics	r2, r3
+	cmp	r2, #192
+	beq	.L572
+.L570:
+	ldr	r3, [r4, #4]
+	ldrb	r5, [r3, #4]
+	ldr	r3, [r4]
 	ldrh	r0, [r3]
-	ldr	r3, .L535+4
+	ldr	r3, .L573+4
 	bl	.L5
-	ldr	r3, .L535+8
+	ldr	r3, .L573+8
 	movs	r1, r0
-	movs	r0, r6
+	movs	r0, r7
 	bl	.L5
 	movs	r0, r4
-	ldr	r3, .L535+12
+	ldr	r3, .L573+12
 	bl	.L5
 	movs	r3, #1
-	movs	r2, r7
+	movs	r2, r5
 	str	r0, [sp]
 	movs	r1, #0
-	ldr	r4, .L535+16
+	ldr	r4, .L573+16
 	rsbs	r3, r3, #0
 	movs	r0, #0
-	bl	.L107
+	bl	.L110
 	movs	r3, #128
 	movs	r2, #70
 	lsls	r3, r3, #3
-	str	r0, [r5, #80]
+	str	r0, [r6, #80]
 	ldr	r1, [r0, #48]
 	strh	r3, [r0, r2]
-	ldr	r4, .L535+20
+	ldr	r4, .L573+20
 	ldrh	r2, [r1, #34]
 	ands	r2, r4
 	orrs	r3, r2
@@ -3663,16 +3929,29 @@ REW_displayActor:
 	adds	r3, r3, #255
 	strh	r3, [r0, r2]
 	movs	r1, #4
-	ldr	r3, .L535+24
+	ldr	r3, .L573+24
 	bl	.L5
-	add	sp, sp, #12
+	add	sp, sp, #80
 	@ sp needed
+	pop	{r7}
+	mov	r8, r7
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L536:
+.L571:
+	adds	r1, r5, #4
+	add	r0, sp, #8
+	bl	REW_loadUnit
+	add	r4, sp, #8
+	b	.L570
+.L572:
+	bics	r0, r2
+	bl	.L10
+	movs	r4, r0
+	b	.L570
+.L574:
 	.align	2
-.L535:
+.L573:
 	.word	GetUnit
 	.word	GetStringFromIndex
 	.word	Text_DrawString
@@ -3690,73 +3969,87 @@ REW_displayActor:
 	.type	REW_displayTarget, %function
 REW_displayTarget:
 	@ Function supports interworking.
-	@ args = 0, pretend = 0, frame = 0
+	@ args = 0, pretend = 0, frame = 72
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, r7, lr}
-	ldrb	r3, [r1]
+	mov	lr, r8
+	push	{lr}
+	movs	r4, r1
+	movs	r7, r0
+	ldr	r6, .L587
+	ldrb	r0, [r1, #1]
+	sub	sp, sp, #80
+	mov	r8, r2
+	bl	.L11
+	ldrb	r3, [r4]
 	movs	r5, r0
-	movs	r4, r2
-	sub	sp, sp, #12
 	cmp	r3, #2
-	beq	.L542
+	beq	.L582
 	cmp	r3, #65
-	beq	.L543
-.L537:
-	add	sp, sp, #12
+	beq	.L583
+.L575:
+	add	sp, sp, #80
 	@ sp needed
+	pop	{r7}
+	mov	r8, r7
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L543:
-	ldrb	r3, [r1, #1]
+.L583:
+	ldrb	r3, [r4, #1]
 	lsls	r3, r3, #31
-	bmi	.L544
+	bmi	.L584
 	movs	r0, #27
-	ldr	r3, .L545
+	ldr	r3, .L587+4
 	bl	.L5
 	movs	r1, r0
-.L541:
-	movs	r0, r4
-	ldr	r3, .L545+4
+.L581:
+	mov	r0, r8
+	ldr	r3, .L587+8
 	bl	.L5
-	b	.L537
-.L542:
-	ldrb	r0, [r1, #1]
-	ldr	r3, .L545+8
-	bl	.L5
-	ldr	r3, [r0, #4]
-	ldrb	r7, [r3, #4]
-	ldr	r3, [r0]
-	movs	r6, r0
+	b	.L575
+.L582:
+	ldrb	r0, [r4, #1]
+	cmp	r0, #255
+	beq	.L585
+	movs	r3, #63
+	movs	r2, r0
+	bics	r2, r3
+	cmp	r2, #192
+	beq	.L586
+.L578:
+	ldr	r3, [r5, #4]
+	ldrb	r6, [r3, #4]
+	ldr	r3, [r5]
 	ldrh	r0, [r3]
-	ldr	r3, .L545+12
+	ldr	r3, .L587+12
 	bl	.L5
-	ldr	r3, .L545+4
+	ldr	r3, .L587+8
 	movs	r1, r0
-	movs	r0, r4
+	mov	r0, r8
 	bl	.L5
-	movs	r0, r4
-	ldr	r3, .L545+16
+	mov	r0, r8
+	ldr	r3, .L587+16
 	bl	.L5
-	ldr	r3, .L545+20
+	ldr	r3, .L587+20
 	movs	r4, r0
-	movs	r0, r6
+	movs	r0, r5
 	bl	.L5
 	movs	r3, #1
-	movs	r2, r7
+	movs	r2, r6
 	str	r0, [sp]
 	movs	r1, #0
-	ldr	r6, .L545+24
+	ldr	r5, .L587+24
 	rsbs	r3, r3, #0
 	movs	r0, #0
-	bl	.L11
+	bl	.L6
 	movs	r3, #128
 	movs	r2, #70
 	lsls	r3, r3, #3
-	str	r0, [r5, #84]
+	str	r0, [r7, #84]
 	ldr	r1, [r0, #48]
 	strh	r3, [r0, r2]
-	ldr	r5, .L545+28
+	ldr	r5, .L587+28
 	ldrh	r2, [r1, #34]
 	ands	r2, r5
 	orrs	r3, r2
@@ -3764,31 +4057,42 @@ REW_displayTarget:
 	strh	r3, [r1, #34]
 	ldrh	r3, [r0, r2]
 	adds	r4, r4, #43
-	lsls	r4, r4, #4
 	adds	r3, r3, #128
-	adds	r3, r3, r4
-	strh	r3, [r0, r2]
+	lsls	r4, r4, #4
+	adds	r4, r4, r3
+	strh	r4, [r0, r2]
 	adds	r2, r2, #2
 	ldrh	r3, [r0, r2]
 	adds	r3, r3, #129
 	adds	r3, r3, #255
 	strh	r3, [r0, r2]
 	movs	r1, #4
-	ldr	r3, .L545+32
+	ldr	r3, .L587+32
 	bl	.L5
-	b	.L537
-.L544:
+	b	.L575
+.L584:
 	movs	r0, #51
-	ldr	r3, .L545
+	ldr	r3, .L587+4
 	bl	.L5
 	movs	r1, r0
-	b	.L541
-.L546:
+	b	.L581
+.L585:
+	adds	r1, r4, #4
+	add	r0, sp, #8
+	bl	REW_loadUnit
+	add	r5, sp, #8
+	b	.L578
+.L586:
+	bics	r0, r2
+	bl	.L11
+	movs	r5, r0
+	b	.L578
+.L588:
 	.align	2
-.L545:
+.L587:
+	.word	GetUnit
 	.word	GetTerrainName
 	.word	Text_DrawString
-	.word	GetUnit
 	.word	GetStringFromIndex
 	.word	Text_GetCursor
 	.word	GetUnitSpritePalette
@@ -3811,57 +4115,57 @@ REW_displayCombatVerb:
 	movs	r5, r2
 	movs	r2, #3
 	movs	r6, r2
-	ldr	r4, .L558
+	ldr	r4, .L600
 	ldrh	r3, [r1, #2]
 	lsls	r4, r4, #16
 	lsrs	r4, r4, #16
 	ands	r6, r3
 	tst	r2, r3
-	beq	.L548
+	beq	.L590
 	adds	r3, r3, #4
 	subs	r3, r3, r6
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L548:
+.L590:
 	ldrh	r2, [r0, #2]
 	adds	r3, r1, r3
 	adds	r0, r0, r2
 	cmp	r3, r0
-	bcs	.L549
+	bcs	.L591
 	ldrb	r2, [r3]
 	cmp	r2, #65
-	beq	.L557
-.L552:
+	beq	.L599
+.L594:
 	@ sp needed
 	movs	r0, r4
-	ldr	r3, .L558+4
+	ldr	r3, .L600+4
 	bl	.L5
-	ldr	r3, .L558+8
+	ldr	r3, .L600+8
 	movs	r1, r0
 	movs	r0, r5
 	bl	.L5
 	pop	{r4, r5, r6}
 	pop	{r0}
 	bx	r0
-.L557:
+.L599:
 	ldrb	r2, [r3, #6]
 	ldrb	r1, [r3, #5]
 	ldrb	r0, [r3, #4]
-	ldr	r3, .L558+12
+	ldr	r3, .L600+12
 	bl	.L5
 	cmp	r0, #0
-	bne	.L552
-	ldr	r4, .L558+16
+	bne	.L594
+	ldr	r4, .L600+16
 	lsls	r4, r4, #16
 	lsrs	r4, r4, #16
-	b	.L552
-.L549:
+	b	.L594
+.L591:
 	movs	r3, #0
 	ldrb	r3, [r3]
 	.inst	0xdeff
-.L559:
+.L601:
 	.align	2
-.L558:
+.L600:
 	.word	REW_combat
 	.word	GetStringFromIndex
 	.word	Text_DrawString
@@ -3870,7 +4174,7 @@ REW_displayCombatVerb:
 	.size	REW_displayCombatVerb, .-REW_displayCombatVerb
 	.section	.rodata.str1.4,"aMS",%progbits,1
 	.align	2
-.LC205:
+.LC214:
 	.ascii	".\000"
 	.text
 	.align	1
@@ -3893,27 +4197,27 @@ REW_refreshUI:
 	movs	r7, r0
 	sub	sp, sp, #12
 	lsls	r2, r3, #30
-	bpl	.LCB4075
-	b	.L610	@long jump
-.LCB4075:
-	ldr	r2, .L625
+	bpl	.LCB4415
+	b	.L652	@long jump
+.LCB4415:
+	ldr	r2, .L667
 	mov	r9, r2
-	ldr	r2, .L625+4
+	ldr	r2, .L667+4
 	mov	r8, r2
-.L561:
+.L603:
 	lsls	r2, r3, #31
-	bpl	.L566
-	ldr	r2, .L625+8
+	bpl	.L608
+	ldr	r2, .L667+8
 	ldrb	r2, [r2, #15]
 	cmp	r2, #64
-	bne	.LCB4091
-	b	.L587	@long jump
-.LCB4091:
+	bne	.LCB4431
+	b	.L629	@long jump
+.LCB4431:
 	subs	r2, r2, #128
 	rsbs	r1, r2, #0
 	adcs	r2, r2, r1
 	lsls	r2, r2, #12
-.L567:
+.L609:
 	ldr	r1, [r7, #88]
 	ldr	r0, [r1, #80]
 	ldrh	r1, [r0, #34]
@@ -3925,67 +4229,67 @@ REW_refreshUI:
 	bics	r3, r2
 	adds	r2, r2, #40
 	strb	r3, [r7, r2]
-.L566:
+.L608:
 	movs	r2, #4
 	movs	r4, r2
 	ldr	r0, [r7, #92]
 	ands	r4, r3
 	tst	r2, r3
-	bne	.LCB4120
-	b	.L568	@long jump
-.LCB4120:
+	bne	.LCB4460
+	b	.L610	@long jump
+.LCB4460:
 	cmp	r0, #0
-	bne	.LCB4122
-	b	.L617	@long jump
-.LCB4122:
-.L569:
+	bne	.LCB4462
+	b	.L659	@long jump
+.LCB4462:
+.L611:
 	movs	r2, #8
 	movs	r4, r2
 	ldr	r0, [r7, #96]
 	ands	r4, r3
 	tst	r2, r3
-	bne	.LCB4131
-	b	.L570	@long jump
-.LCB4131:
-.L624:
+	bne	.LCB4471
+	b	.L612	@long jump
+.LCB4471:
+.L666:
 	cmp	r0, #0
-	bne	.LCB4134
-	b	.L618	@long jump
-.LCB4134:
-.L571:
-	ldr	r3, .L625+12
+	bne	.LCB4474
+	b	.L660	@long jump
+.LCB4474:
+.L613:
+	ldr	r3, .L667+12
 	bl	.L5
 	movs	r3, #0
 	str	r3, [r7, #80]
 	str	r3, [r7, #84]
 	movs	r3, #160
-	ldr	r4, .L625+16
+	ldr	r4, .L667+16
 	lsls	r3, r3, #3
-	ldr	r5, .L625+20
+	ldr	r5, .L667+20
 	adds	r6, r4, r3
-.L572:
+.L614:
 	movs	r0, r4
 	movs	r2, #48
 	movs	r1, #0
 	adds	r4, r4, #64
 	bl	.L6
 	cmp	r6, r4
-	bne	.L572
+	bne	.L614
 	movs	r3, #41
 	movs	r4, r7
 	ldrb	r3, [r7, r3]
 	adds	r4, r4, #48
 	lsls	r2, r3, #27
-	bpl	.L574
+	bpl	.L616
 	adds	r4, r4, #8
-.L574:
+.L616:
 	movs	r2, #16
 	eors	r3, r2
 	movs	r2, #41
 	movs	r0, r4
 	strb	r3, [r7, r2]
 	bl	.L9
-	ldr	r3, .L625+24
+	ldr	r3, .L667+24
 	movs	r1, #2
 	movs	r0, r4
 	bl	.L5
@@ -3993,21 +4297,21 @@ REW_refreshUI:
 	ldrb	r3, [r2, #4]
 	adds	r5, r2, #4
 	cmp	r3, #2
-	beq	.L584
-.L619:
+	beq	.L626
+.L661:
 	cmp	r3, #64
-	beq	.L585
+	beq	.L627
 	movs	r1, #3
 	movs	r0, r1
 	ldrh	r3, [r5, #2]
 	ands	r0, r3
 	tst	r1, r3
-	beq	.L582
+	beq	.L624
 	adds	r3, r3, #4
 	subs	r3, r3, r0
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L582:
+.L624:
 	adds	r5, r5, r3
 	ldrh	r3, [r2, #2]
 	adds	r3, r2, r3
@@ -4018,8 +4322,8 @@ REW_refreshUI:
 	ands	r5, r3
 	ldrb	r3, [r5]
 	cmp	r3, #2
-	bne	.L619
-.L584:
+	bne	.L661
+.L626:
 	movs	r2, r4
 	movs	r1, r5
 	movs	r0, r7
@@ -4034,8 +4338,8 @@ REW_refreshUI:
 	ldr	r2, [r7, #44]
 	ands	r0, r3
 	tst	r1, r3
-	bne	.L620
-.L576:
+	bne	.L662
+.L618:
 	adds	r1, r5, r3
 	ldrh	r3, [r2, #2]
 	adds	r2, r2, r3
@@ -4045,16 +4349,16 @@ REW_refreshUI:
 	ands	r1, r2
 	movs	r2, r4
 	bl	REW_displayTarget
-	ldr	r1, .L625+28
+	ldr	r1, .L667+28
 	movs	r0, r4
-	ldr	r3, .L625+32
+	ldr	r3, .L667+32
 	bl	.L5
 	movs	r0, r4
-	ldr	r1, .L625+36
+	ldr	r1, .L667+36
 	bl	.L10
-.L578:
+.L620:
 	movs	r0, #0
-	ldr	r3, .L625+40
+	ldr	r3, .L667+40
 	bl	.L5
 	add	sp, sp, #12
 	@ sp needed
@@ -4064,55 +4368,55 @@ REW_refreshUI:
 	pop	{r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L585:
-	ldr	r3, .L625+8
+.L627:
+	ldr	r3, .L667+8
 	ldrb	r3, [r3, #15]
 	cmp	r3, #0
-	beq	.L579
+	beq	.L621
 	cmp	r3, #128
-	bne	.L621
+	bne	.L663
 	movs	r0, r4
 	movs	r1, #1
-	ldr	r3, .L625+44
+	ldr	r3, .L667+44
 	bl	.L5
-	ldr	r0, .L625+48
-.L616:
+	ldr	r0, .L667+48
+.L658:
 	lsls	r0, r0, #16
-	ldr	r3, .L625+52
+	ldr	r3, .L667+52
 	lsrs	r0, r0, #16
 	bl	.L5
-	ldr	r3, .L625+56
+	ldr	r3, .L667+56
 	movs	r1, r0
 	movs	r0, r4
 	bl	.L5
 	movs	r0, r4
-	ldr	r1, .L625+60
+	ldr	r1, .L667+60
 	bl	.L10
-	b	.L578
-.L610:
+	b	.L620
+.L652:
 	movs	r4, r0
-	ldr	r3, .L625+8
+	ldr	r3, .L667+8
 	ldrh	r5, [r3, #16]
 	adds	r4, r4, #64
 	lsls	r3, r5, #31
-	bpl	.L563
+	bpl	.L605
 	adds	r4, r4, #8
-.L563:
-	ldr	r3, .L625
+.L605:
+	ldr	r3, .L667
 	movs	r0, r4
 	mov	r9, r3
 	bl	.L5
 	movs	r1, #2
 	movs	r0, r4
-	ldr	r3, .L625+64
+	ldr	r3, .L667+64
 	bl	.L5
 	cmp	r5, #9
-	ble	.L622
+	ble	.L664
 	cmp	r5, #99
-	ble	.L623
-.L565:
-	ldr	r3, .L625+4
-	ldr	r1, .L625+68
+	ble	.L665
+.L607:
+	ldr	r3, .L667+4
+	ldr	r1, .L667+68
 	movs	r0, r4
 	mov	r8, r3
 	bl	.L5
@@ -4121,19 +4425,19 @@ REW_refreshUI:
 	ldrb	r3, [r7, r2]
 	bics	r3, r1
 	strb	r3, [r7, r2]
-	b	.L561
-.L620:
+	b	.L603
+.L662:
 	adds	r3, r3, #4
 	subs	r3, r3, r0
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-	b	.L576
-.L568:
+	b	.L618
+.L610:
 	cmp	r0, #0
-	bne	.LCB4347
-	b	.L569	@long jump
-.LCB4347:
-	ldr	r3, .L625+72
+	bne	.LCB4687
+	b	.L611	@long jump
+.LCB4687:
+	ldr	r3, .L667+72
 	bl	.L5
 	movs	r2, #8
 	movs	r3, #41
@@ -4143,91 +4447,91 @@ REW_refreshUI:
 	ldr	r0, [r7, #96]
 	ands	r4, r3
 	tst	r2, r3
-	beq	.LCB4358
-	b	.L624	@long jump
-.LCB4358:
-.L570:
+	beq	.LCB4698
+	b	.L666	@long jump
+.LCB4698:
+.L612:
 	cmp	r0, #0
-	bne	.LCB4361
-	b	.L571	@long jump
-.LCB4361:
-	ldr	r3, .L625+72
+	bne	.LCB4701
+	b	.L613	@long jump
+.LCB4701:
+	ldr	r3, .L667+72
 	bl	.L5
 	str	r4, [r7, #96]
-	b	.L571
-.L621:
+	b	.L613
+.L663:
 	movs	r0, r4
 	movs	r1, #4
-	ldr	r3, .L625+44
+	ldr	r3, .L667+44
 	bl	.L5
-	ldr	r0, .L625+76
-	b	.L616
-.L622:
+	ldr	r0, .L667+76
+	b	.L658
+.L664:
 	movs	r0, r4
 	movs	r1, #6
-	ldr	r3, .L625+44
+	ldr	r3, .L667+44
 	bl	.L5
 	movs	r1, r5
 	movs	r0, r4
-	ldr	r3, .L625+80
+	ldr	r3, .L667+80
 	bl	.L5
-	b	.L565
-.L587:
+	b	.L607
+.L629:
 	movs	r2, #128
 	lsls	r2, r2, #6
-	b	.L567
-.L579:
-	ldr	r0, .L625+84
-	b	.L616
-.L618:
-	ldr	r4, .L625+88
+	b	.L609
+.L621:
+	ldr	r0, .L667+84
+	b	.L658
+.L660:
+	ldr	r4, .L667+88
 	str	r0, [sp, #4]
 	str	r0, [sp]
 	movs	r3, #0
 	movs	r0, r4
 	movs	r2, #0
 	movs	r1, #0
-	ldr	r4, .L625+92
-	bl	.L107
+	ldr	r4, .L667+92
+	bl	.L110
 	str	r0, [r7, #96]
-	b	.L571
-.L617:
-	ldr	r4, .L625+96
+	b	.L613
+.L659:
+	ldr	r4, .L667+96
 	movs	r3, #0
 	str	r0, [sp, #4]
 	str	r0, [sp]
 	movs	r2, #0
 	movs	r0, r4
 	movs	r1, #0
-	ldr	r4, .L625+92
-	bl	.L107
+	ldr	r4, .L667+92
+	bl	.L110
 	movs	r3, #41
 	str	r0, [r7, #92]
 	ldrb	r3, [r7, r3]
-	b	.L569
-.L623:
-	ldr	r3, .L625+100
+	b	.L611
+.L665:
+	ldr	r3, .L667+100
 	movs	r1, #10
 	movs	r0, r5
 	bl	.L5
-	ldr	r6, .L625+80
+	ldr	r6, .L667+80
 	movs	r1, r0
 	movs	r0, r4
 	bl	.L11
 	movs	r0, r4
 	movs	r1, #16
-	ldr	r3, .L625+44
+	ldr	r3, .L667+44
 	bl	.L5
 	movs	r0, r5
-	ldr	r3, .L625+104
+	ldr	r3, .L667+104
 	movs	r1, #10
 	bl	.L5
 	movs	r0, r4
 	bl	.L11
-	b	.L565
-.L626:
+	b	.L607
+.L668:
 	.align	2
-.L625:
+.L667:
 	.word	ClearText
 	.word	PutText
 	.word	gPlaySt
@@ -4235,7 +4539,7 @@ REW_refreshUI:
 	.word	gBG0TilemapBuffer
 	.word	memset
 	.word	Text_SetCursor
-	.word	.LC205
+	.word	.LC214
 	.word	Text_DrawCharacter
 	.word	gBG0TilemapBuffer+138
 	.word	BG_EnableSync
@@ -4277,86 +4581,86 @@ REW_undo:
 	ands	r1, r3
 	adds	r0, r5, r0
 	tst	r2, r3
-	beq	.L628
-.L657:
+	beq	.L670
+.L699:
 	adds	r3, r3, #4
 	subs	r3, r3, r1
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L628:
+.L670:
 	adds	r3, r4, r3
 	cmp	r3, r0
-	bcs	.L629
-.L658:
+	bcs	.L671
+.L700:
 	cmp	r3, #0
-	beq	.L629
+	beq	.L671
 	movs	r4, r3
 	movs	r1, r2
 	ldrh	r3, [r4, #2]
 	ands	r1, r3
 	tst	r2, r3
-	bne	.L657
+	bne	.L699
 	adds	r3, r4, r3
 	cmp	r3, r0
-	bcc	.L658
-.L629:
-	ldr	r6, .L661
-	b	.L637
-.L660:
+	bcc	.L700
+.L671:
+	ldr	r6, .L703
+	b	.L679
+.L702:
 	cmp	r3, #2
-	beq	.L633
+	beq	.L675
 	cmp	r3, #64
-	bne	.L635
+	bne	.L677
 	movs	r0, r4
 	bl	REW_undoPhaseChange
-.L635:
+.L677:
 	movs	r1, r4
 	movs	r0, r5
 	bl	REW_prevEntry
 	subs	r4, r0, #0
-	beq	.L659
-.L637:
+	beq	.L701
+.L679:
 	ldrb	r3, [r4]
 	cmp	r3, #65
-	beq	.L631
-	bls	.L660
+	beq	.L673
+	bls	.L702
 	cmp	r3, #66
-	beq	.L633
+	beq	.L675
 	subs	r3, r3, #67
 	lsls	r3, r3, #24
 	lsrs	r3, r3, #24
 	cmp	r3, #1
-	bhi	.L635
+	bhi	.L677
 	ldrb	r0, [r4, #1]
 	bl	.L11
 	cmp	r0, #0
-	beq	.L635
+	beq	.L677
 	ldr	r3, [r0]
 	cmp	r3, #0
-	beq	.L635
-	ldr	r3, .L661+4
+	beq	.L677
+	ldr	r3, .L703+4
 	bl	.L5
 	movs	r1, r4
 	movs	r0, r5
 	bl	REW_prevEntry
 	subs	r4, r0, #0
-	bne	.L637
-.L659:
+	bne	.L679
+.L701:
 	@ sp needed
 	pop	{r4, r5, r6}
 	pop	{r0}
 	bx	r0
-.L633:
+.L675:
 	movs	r0, r4
 	bl	REW_undoCombat
-	b	.L635
-.L631:
+	b	.L677
+.L673:
 	movs	r0, r4
 	bl	REW_undoObstacleCombat
-	b	.L635
-.L662:
+	b	.L677
+.L704:
 	.align	2
-.L661:
+.L703:
 	.word	GetUnit
 	.word	ClearUnit
 	.size	REW_undo, .-REW_undo
@@ -4374,64 +4678,64 @@ REW_redo:
 	push	{r3, r4, r5, r6, r7, lr}
 	movs	r5, r0
 	movs	r6, #3
-	ldr	r7, .L682
+	ldr	r7, .L724
 	adds	r4, r0, #4
-.L671:
+.L713:
 	ldrb	r3, [r4]
 	cmp	r3, #65
-	beq	.L664
-	bhi	.L665
+	beq	.L706
+	bhi	.L707
 	cmp	r3, #2
-	beq	.L666
+	beq	.L708
 	cmp	r3, #64
-	bne	.L668
+	bne	.L710
 	movs	r0, r4
 	bl	REW_redoPhaseChange
-.L668:
+.L710:
 	movs	r2, r6
 	ldrh	r3, [r4, #2]
 	ands	r2, r3
 	tst	r6, r3
-	beq	.L669
+	beq	.L711
 	adds	r3, r3, #4
 	subs	r3, r3, r2
 	lsls	r3, r3, #16
 	lsrs	r3, r3, #16
-.L669:
+.L711:
 	adds	r4, r4, r3
 	ldrh	r3, [r5, #2]
 	adds	r3, r5, r3
 	cmp	r4, r3
-	bcs	.L663
+	bcs	.L705
 	cmp	r4, #0
-	bne	.L671
-.L663:
+	bne	.L713
+.L705:
 	@ sp needed
 	pop	{r3, r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L665:
+.L707:
 	cmp	r3, #66
-	beq	.L666
+	beq	.L708
 	subs	r3, r3, #67
 	lsls	r3, r3, #24
 	lsrs	r3, r3, #24
 	cmp	r3, #1
-	bhi	.L668
+	bhi	.L710
 	adds	r0, r4, #4
 	bl	.L7
-	b	.L668
-.L666:
+	b	.L710
+.L708:
 	movs	r0, r4
 	bl	REW_redoCombat
-	b	.L668
-.L664:
+	b	.L710
+.L706:
 	movs	r0, r4
 	bl	REW_redoObstacleCombat
-	b	.L668
-.L683:
+	b	.L710
+.L725:
 	.align	2
-.L682:
+.L724:
 	.word	LoadUnit
 	.size	REW_redo, .-REW_redo
 	.align	1
@@ -4446,76 +4750,76 @@ REW_handleInput:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r3, r4, r5, r6, r7, lr}
-	ldr	r3, .L718
+	ldr	r3, .L760
 	ldr	r3, [r3]
-	ldr	r5, .L718+4
+	ldr	r5, .L760+4
 	ldrh	r3, [r3, #6]
 	movs	r4, r0
 	ldrb	r7, [r5, #15]
 	ldrh	r6, [r5, #16]
 	lsls	r2, r3, #25
-	bpl	.L685
+	bpl	.L727
 	movs	r2, #41
 	ldrb	r2, [r0, r2]
 	lsls	r2, r2, #29
-	bpl	.L685
+	bpl	.L727
 	movs	r3, #65
 	ldrb	r3, [r5, r3]
 	lsls	r3, r3, #30
-	bpl	.L714
-.L686:
+	bpl	.L756
+.L728:
 	ldr	r0, [r4, #44]
 	bl	REW_undo
 	movs	r3, #41
 	ldrb	r2, [r5, #15]
 	ldrb	r3, [r4, r3]
 	cmp	r2, r7
-	beq	.L687
+	beq	.L729
 	movs	r2, #1
 	orrs	r3, r2
-.L687:
+.L729:
 	ldrh	r2, [r5, #16]
 	cmp	r2, r6
-	beq	.L688
+	beq	.L730
 	movs	r2, #2
 	orrs	r3, r2
-.L688:
+.L730:
 	ldr	r2, [r4, #44]
 	ldrh	r1, [r2]
 	subs	r2, r2, r1
 	str	r2, [r4, #44]
 	ldrh	r2, [r2]
 	cmp	r2, #0
-	beq	.L715
-.L689:
+	beq	.L757
+.L731:
 	movs	r2, #8
-.L713:
+.L755:
 	orrs	r3, r2
 	movs	r2, #41
 	movs	r0, r4
 	strb	r3, [r4, r2]
 	bl	REW_refreshUI
-	ldr	r3, .L718+8
+	ldr	r3, .L760+8
 	bl	.L5
-	ldr	r3, .L718+12
+	ldr	r3, .L760+12
 	bl	.L5
-.L684:
+.L726:
 	@ sp needed
 	pop	{r3, r4, r5, r6, r7}
 	pop	{r0}
 	bx	r0
-.L685:
+.L727:
 	lsls	r3, r3, #24
-	bpl	.L684
+	bpl	.L726
 	movs	r3, #41
 	ldrb	r3, [r4, r3]
 	lsls	r3, r3, #28
-	bpl	.L684
+	bpl	.L726
 	movs	r3, #65
 	ldrb	r3, [r5, r3]
 	lsls	r3, r3, #30
-	bpl	.L716
-.L691:
+	bpl	.L758
+.L733:
 	ldr	r0, [r4, #44]
 	ldrh	r3, [r0, #2]
 	adds	r0, r0, r3
@@ -4525,46 +4829,46 @@ REW_handleInput:
 	ldrb	r2, [r5, #15]
 	ldrb	r3, [r4, r3]
 	cmp	r2, r7
-	beq	.L692
+	beq	.L734
 	movs	r2, #1
 	orrs	r3, r2
-.L692:
+.L734:
 	ldrh	r2, [r5, #16]
 	cmp	r2, r6
-	beq	.L693
+	beq	.L735
 	movs	r2, #2
 	orrs	r3, r2
-.L693:
-	ldr	r2, .L718+16
+.L735:
+	ldr	r2, .L760+16
 	ldr	r2, [r2]
 	ldr	r1, [r4, #44]
 	ldr	r2, [r2, #4]
 	cmp	r1, r2
-	bcs	.L717
+	bcs	.L759
 	movs	r2, #4
-	b	.L713
-.L715:
+	b	.L755
+.L757:
 	adds	r2, r2, #4
 	bics	r3, r2
-	b	.L689
-.L714:
+	b	.L731
+.L756:
 	movs	r0, #102
-	ldr	r3, .L718+20
+	ldr	r3, .L760+20
 	bl	.L5
-	b	.L686
-.L717:
+	b	.L728
+.L759:
 	movs	r2, #8
 	bics	r3, r2
 	movs	r2, #4
-	b	.L713
-.L716:
+	b	.L755
+.L758:
 	movs	r0, #102
-	ldr	r3, .L718+20
+	ldr	r3, .L760+20
 	bl	.L5
-	b	.L691
-.L719:
+	b	.L733
+.L761:
 	.align	2
-.L718:
+.L760:
 	.word	gKeyStatusPtr
 	.word	gPlaySt
 	.word	RefreshEntityBmMaps
@@ -4575,7 +4879,7 @@ REW_handleInput:
 	.global	REW_procScr
 	.section	.rodata.str1.4
 	.align	2
-.LC229:
+.LC238:
 	.ascii	"REW_proc\000"
 	.section	.rodata
 	.align	2
@@ -4585,7 +4889,7 @@ REW_handleInput:
 REW_procScr:
 	.short	1
 	.short	0
-	.word	.LC229
+	.word	.LC238
 	.short	14
 	.short	0
 	.word	0
@@ -4627,7 +4931,7 @@ REW_procScr:
 	.align	1
 .L5:
 	bx	r3
-.L107:
+.L110:
 	bx	r4
 .L6:
 	bx	r5
@@ -4641,5 +4945,5 @@ REW_procScr:
 	bx	r9
 .L8:
 	bx	r10
-.L284:
+.L144:
 	bx	fp

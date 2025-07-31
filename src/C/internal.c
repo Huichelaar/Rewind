@@ -116,3 +116,35 @@ void REW_hideRoofedUnits() {
     }
   }
 }
+
+// Load unit out of REW_UnitDefData.
+void REW_loadUnit(struct Unit* unit, struct REW_UnitDefData* unitDefData) {
+  struct UnitDefinition unitDef;
+  int i;
+  
+  unitDef.charIndex =       unitDefData->charIndex;
+  unitDef.classIndex =      unitDefData->classIndex;
+  unitDef.leaderCharIndex = 0;
+  unitDef.autolevel =       0;
+  unitDef.allegiance =      unitDefData->allegiance;
+  unitDef.level =           unitDefData->level;
+  unitDef.xPosition =       unitDefData->xPosition;
+  unitDef.yPosition =       unitDefData->yPosition;
+  unitDef.genMonster =      0;
+  unitDef.itemDrop =        unitDefData->itemDrop;
+  unitDef.unk_05_7 =        0;
+  unitDef.extraData =       0;
+  unitDef.redaCount =       0;
+  unitDef.redas =           NULL;
+  for (i = 0; i < UNIT_DEFINITION_ITEM_COUNT; i++) { unitDef.items[i] = 0; }
+  for (i = 0; i < UDEF_AIIDX_MAX; i++) { unitDef.ai[i] = 0; }
+  
+  // Clear unit.
+  CpuFill32(0, unit, REW_UNITSIZE);
+  
+  // Load unit from unitDefinition.
+  UnitInitFromDefinition(unit, &unitDef);
+  
+  // Set index to reflect faction.
+  unit->index = unitDef.allegiance << 6;
+}

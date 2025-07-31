@@ -71,6 +71,20 @@ void REW_initProc(struct REW_ProcState* proc) {
 // Draws actor (left unit) name & starts MU.
 void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, struct Text* sequenceDesc) {
   struct Unit* unit = GetUnit(rewindEntry->flags);
+  struct Unit referenceUnit;
+  
+  // Check if unit died.
+  if (rewindEntry->flags == REW_UNITDIED_CLEARED) {
+    
+    // Unit died and got cleared. Create temporary unit instead.
+    REW_loadUnit(&referenceUnit, (struct REW_UnitDefData*)rewindEntry->data);
+    unit = &referenceUnit;
+  } else if ((rewindEntry->flags & REW_UNITDIED_NOCLEAR) == REW_UNITDIED_NOCLEAR) {
+    
+    // Unit died but did not get cleared.
+    unit = GetUnit(rewindEntry->flags & ~REW_UNITDIED_NOCLEAR);
+  }
+  
   u16 name = unit->pCharacterData->nameTextId;
   u8 class = unit->pClassData->number;
   Text_DrawString(sequenceDesc, GetStringFromIndex(name));     // Draw actor's name.
@@ -87,9 +101,25 @@ void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewind
 // Draws target (right unit) name & starts MU.
 // If obstacle, draw obstacle name.
 void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewindEntry, struct Text* sequenceDesc) {
+  struct Unit* unit = GetUnit(rewindEntry->flags);
+  struct Unit referenceUnit;
+  
+  // Check if target is unit or obstacle.
   if (rewindEntry->diffType == UNIT_ACTION_COMBAT) {
-    // Unit.
-    struct Unit* unit = GetUnit(rewindEntry->flags);
+    // Target is unit.
+    
+    // Check if unit died.
+    if (rewindEntry->flags == REW_UNITDIED_CLEARED) {
+      
+      // Unit died and got cleared. Create temporary unit instead.
+      REW_loadUnit(&referenceUnit, (struct REW_UnitDefData*)rewindEntry->data);
+      unit = &referenceUnit;
+    } else if ((rewindEntry->flags & REW_UNITDIED_NOCLEAR) == REW_UNITDIED_NOCLEAR) {
+    
+      // Unit died but did not get cleared.
+      unit = GetUnit(rewindEntry->flags & ~REW_UNITDIED_NOCLEAR);
+    }
+    
     u16 name = unit->pCharacterData->nameTextId;
     u8 class = unit->pClassData->number;
     Text_DrawString(sequenceDesc, GetStringFromIndex(name));     // Draw target's name.
@@ -102,8 +132,10 @@ void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewin
     proc->muTarget->x_q4 += 128 + targetX;                  // Adjust x position.
     proc->muTarget->y_q4 += 384;                            // Adjust y position.
     SetMuFacing(proc->muTarget, MU_FACING_SELECTED);
+    
   } else if (rewindEntry->diffType == REW_ACTION_BREAK) {
-    // Obstacle.
+    // Target is obstacle.
+    
     char* name = (rewindEntry->flags & REW_OBSTACLE_SNAG) ? GetTerrainName(REW_SNAG_ID) : GetTerrainName(REW_WALL_ID);
     Text_DrawString(sequenceDesc, name);    // Draw target's name.
   }

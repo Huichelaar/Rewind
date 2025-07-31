@@ -45,31 +45,93 @@ void REW_redoObstacleCombat(struct REW_RewindEntry* entry) {
 
 // Undo generic combat action.
 void REW_undoCombat(struct REW_RewindEntry* entry) {
-  struct Unit* unit = GetUnit(entry->flags);     // TODO this doesn't work if unit died.
+  struct Unit* unit = GetUnit(entry->flags);
+  struct Unit* supporterUnit;
+  struct Trap* trap;
   struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
+  u8* unitArr;
+  int i, unitSupporterCount, unitSupporterIndex;
+  int changeCount = entry->size - REW_ENTRY_BASESIZE;
   
-  // Ignore if we can't find unit.
-  if (!UNIT_IS_VALID(unit))
-    return;
+  // Check if unit died.
+  if (entry->flags == REW_UNITDIED_CLEARED) {
+    // Unit died and got cleared.
+    
+    // Re-load unit.
+    unit = GetFreeUnit(((struct REW_UnitDefData*)entry->data)->allegiance << 6);
+    
+    // Store index, as it'll be cleared.
+    i = unit->index;
+    
+    // Load unit from unitDefData.
+    REW_loadUnit(unit, (struct REW_UnitDefData*)entry->data);
+    
+    // Re-set index, as it got cleared.
+    unit->index = i;
+    
+    // Also set exp to -1 as clear-on-death units don't gain exp.
+    unit->exp = 0xFF;
+    
+    // Data after REW_UnitDefData is REW_UnitChangeData.
+    unitChangeData = (struct REW_UnitChangeData*)(entry->data + REW_ENTRY_UNITDEFDATA_SIZE);
+    
+    // REW_UnitDefData are not unitChangeData, so remove from changeCount.
+    changeCount -= REW_ENTRY_UNITDEFDATA_SIZE;
+    
+  } else if ((entry->flags & REW_UNITDIED_NOCLEAR) == REW_UNITDIED_NOCLEAR) {
+    
+    // Unit died but did not get cleared.
+    unit = GetUnit(entry->flags & ~REW_UNITDIED_NOCLEAR);
+      
+    // Re-set supports.
+    unitSupporterCount = GetUnitSupporterCount(unit);
+    for (i = 0; i < unitSupporterCount; i++) {
+      
+      supporterUnit = GetUnitSupporterUnit(unit, i);
+      if (!supporterUnit)
+        continue;
+      
+      unitSupporterIndex = GetUnitSupporterNum(supporterUnit, unit->pCharacterData->number);
+      supporterUnit->supports[unitSupporterIndex] = entry->data[i];
+      unit->supports[i] = entry->data[i];   // Main unit's supports also got cleared.
+    }
+    
+    // Data after supports is REW_UnitChangeData.
+    unitChangeData = (struct REW_UnitChangeData*)(entry->data + unitSupporterCount);
+    
+    // support array is not unitChangeData, so remove from changeCount.
+    changeCount -= unitSupporterCount;
+  }
   
   s8 xPost = unit->xPos;
   s8 yPost = unit->yPos;
+  changeCount /= 2;         // Change is offs and diff, so size / 2.
   
   // Undo changes applied to unit due to combat.
-  // TODO interpret x and y as absolute vals if unit died.
-  for (int i = 0; i < ((entry->size - REW_ENTRY_BASESIZE) / 2); i++) {
+  unitArr = (u8*)unit;
+  for (int i = 0; i < changeCount; i++) {
     
     if (unitChangeData[i].offs < REW_UNITSIZE) {
       
+      // If unit is riding ballista, alter relevant trap struct.
+      if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA_ID) {
+        unit->ballistaIndex = 0;    // Sometimes ballista-index is not cleared on unit-death.
+
+        trap = GetTrap((unitArr[unitChangeData[i].offs] - unitChangeData[i].diff) & 0xFF);
+        SetBallistaOccupied(trap);
+        trap->xPos = unit->xPos;
+        trap->yPos = unit->yPos;
+      }
+      
       // Undo generic changes applied to unit due to combat.
-      *(u8*)((u32)unit + unitChangeData[i].offs) -= unitChangeData[i].diff;
+      unitArr[unitChangeData[i].offs] -= unitChangeData[i].diff;
     
     } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
       
       // Undo BWL-data change.
       ((u8*)GetPidStats(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] -= unitChangeData[i].diff;
     
-    } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
+    } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA_USES) {
       
       // Undo/Incr. ballista uses.
       GetTrap(unit->ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES] -= unitChangeData[i].diff;
@@ -77,7 +139,7 @@ void REW_undoCombat(struct REW_RewindEntry* entry) {
   }
   
   // Move unit back to their position before they entered combat.
-  // TODO, if unit died...
+  // If unit died this ends up clearing and then setting the same location.
   gBmMapUnit[yPost][xPost] = 0;
   gBmMapUnit[unit->yPos][unit->xPos] = unit->index;
 }
@@ -85,30 +147,77 @@ void REW_undoCombat(struct REW_RewindEntry* entry) {
 // Redo generic combat action.
 void REW_redoCombat(struct REW_RewindEntry* entry) {
   struct Unit* unit = GetUnit(entry->flags);
+  struct Trap* trap;
   struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)entry->data;
+  struct REW_UnitDefData* unitDefData = (struct REW_UnitDefData*)entry->data;
+  u8* unitArr;
+  int unitSupporterCount;
+  int changeCount = entry->size - REW_ENTRY_BASESIZE;
   
-  // Ignore if we can't find unit.
-  if (!UNIT_IS_VALID(unit))
-    return;
+  // Check if unit died.
+  if (entry->flags == REW_UNITDIED_CLEARED) {
+    // Unit died and got cleared.
+    
+    // Clear unit.
+    unit = GetUnit(gBmMapUnit[unitDefData->yPosition][unitDefData->xPosition]);
+    if (unit != NULL) {
+      
+      // Mark unit slot as available.
+      unit->pCharacterData = NULL;
+    }
+    
+    // Data after REW_UnitDefData is REW_UnitChangeData.
+    unitChangeData = (struct REW_UnitChangeData*)(entry->data + REW_ENTRY_UNITDEFDATA_SIZE);
+    
+    // REW_UnitDefData are not unitChangeData, so remove from changeCount.
+    changeCount -= REW_ENTRY_UNITDEFDATA_SIZE;
+    
+  } else if ((entry->flags & REW_UNITDIED_NOCLEAR) == REW_UNITDIED_NOCLEAR) {
+    // Unit died but did not get cleared.
+    
+    unit = GetUnit(entry->flags & ~REW_UNITDIED_NOCLEAR);
+    
+    // Clear supports.
+    InitUnitsupports(unit);
+    
+    // Data after supports is REW_UnitChangeData.
+    unitSupporterCount = GetUnitSupporterCount(unit);
+    unitChangeData = (struct REW_UnitChangeData*)(entry->data + unitSupporterCount);
+    
+    // support array is not unitChangeData, so remove from changeCount.
+    changeCount -= unitSupporterCount;
+  }
   
   s8 xPrev = unit->xPos;
   s8 yPrev = unit->yPos;
+  changeCount /= 2;         // Change is offs and diff, so size / 2.
   
   // Redo changes applied to unit due to combat.
-  // TODO interpret x and y as absolute vals if unit died.
-  for (int i = 0; i < ((entry->size - REW_ENTRY_BASESIZE) / 2); i++) {
+  unitArr = (u8*)unit;
+  for (int i = 0; i < changeCount; i++) {
     
     if (unitChangeData[i].offs < REW_UNITSIZE) {
       
+      // If unit is riding ballista, alter relevant trap struct.
+      if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA_ID) {
+        trap = GetTrap(unit->ballistaIndex);
+        
+        if (GetUnitCurrentHp(unit) == 0)
+          ClearBallistaOccupied(trap);
+        
+        trap->xPos = unit->xPos;
+        trap->yPos = unit->yPos;
+      }
+      
       // Redo generic changes applied to unit due to combat.
-      *(u8*)((u32)unit + unitChangeData[i].offs) += unitChangeData[i].diff;
+      unitArr[unitChangeData[i].offs] += unitChangeData[i].diff;
       
     } else if (unitChangeData[i].offs < (REW_UNITOFFS_BWL + REW_BWLSIZE)) {
       
       // Redo BWL-data change.
       ((u8*)GetPidStats(unit->pCharacterData->number))[unitChangeData[i].offs - REW_UNITOFFS_BWL] += unitChangeData[i].diff;
     
-    } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA) {
+    } else if (unitChangeData[i].offs == REW_UNITOFFS_BALLISTA_USES) {
       
       // Redo/Decr. ballista uses.
       GetTrap(unit->ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES] += unitChangeData[i].diff;
@@ -116,11 +225,12 @@ void REW_redoCombat(struct REW_RewindEntry* entry) {
   }
   
   // Move unit back to their position after they finished combat.
-  // TODO, clear unit if they died.
-  gBmMapUnit[yPrev][xPrev] = 0;
+  // If unit died this ends up setting and then clearing the same location.
   gBmMapUnit[unit->yPos][unit->xPos] = unit->index;
+  gBmMapUnit[yPrev][xPrev] = 0;
 }
 
+// Returns updated version of what bu's BWL data would be after battle.
 struct UnitUsageStats REW_applyBWLChanges(struct BattleUnit* bu) {
   struct UnitUsageStats* bwlPre = GetPidStats(bu->unit.pCharacterData->number);
   struct UnitUsageStats bwlPost;
@@ -219,7 +329,7 @@ struct UnitUsageStats REW_applyBWLChanges(struct BattleUnit* bu) {
 //  - byte diff. Subtract diff from offset when undoing, add when redoing.
 void REW_storeCombatData(struct Unit* unit,
                          struct BattleUnit* bu,
-                         int ballista,
+                         u32 postCombatStateMask,
                          s8 xPrev,
                          s8 yPrev,
                          struct REW_RewindSequence* rewindSeq,
@@ -269,6 +379,9 @@ void REW_storeCombatData(struct Unit* unit,
   //  - Item re-ordering.
   UnitRemoveInvalidItems(&buCopy);
   
+  //  - unitState postCombat.
+  buCopy.state |= postCombatStateMask;
+  
   // Now store changes of unit.
   struct REW_UnitChangeData* unitChangeData = (struct REW_UnitChangeData*)rewindEntry->data;
   
@@ -296,16 +409,6 @@ void REW_storeCombatData(struct Unit* unit,
     }
   }
   
-  //  - Ballista changes. BattleApplyBallistaUpdates, 0x802C300.
-  if (ballista) {
-    diff = GetItemUses(bu->weapon) - GetTrap(buCopy.ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES];
-    if (diff) {
-      unitChangeData[changeIdx].offs = REW_UNITOFFS_BALLISTA;
-      unitChangeData[changeIdx].diff = diff;
-      changeIdx += 1;
-    }
-  }
-  
   //  - BWL changes.
   bwlPre = GetPidStats(bu->unit.pCharacterData->number);
   if (bwlPre != NULL) {
@@ -318,6 +421,16 @@ void REW_storeCombatData(struct Unit* unit,
         unitChangeData[changeIdx].diff = diff;
         changeIdx += 1;
       }
+    }
+  }
+  
+  //  - Ballista uses. BattleApplyBallistaUpdates, 0x802C300.
+  if (buCopy.ballistaIndex != 0 && bu->weapon != 0) {
+    diff = GetItemUses(bu->weapon) - GetTrap(buCopy.ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES];
+    if (diff) {
+      unitChangeData[changeIdx].offs = REW_UNITOFFS_BALLISTA_USES;
+      unitChangeData[changeIdx].diff = diff;
+      changeIdx += 1;
     }
   }
   
@@ -339,7 +452,7 @@ void REW_storeCombatData(struct Unit* unit,
 //    that differs between loaded unit and unit to be cleared.
 void REW_storeCombatDataDead(struct Unit* unit,
                              struct BattleUnit* bu,
-                             int ballista,
+                             u32 postCombatStateMask,
                              s8 xPrev,
                              s8 yPrev,
                              struct REW_RewindSequence* rewindSeq,
@@ -351,7 +464,6 @@ void REW_storeCombatDataDead(struct Unit* unit,
   u8 diff;
   struct Unit referenceUnit;
   struct Unit* supporterUnit;
-  struct UnitDefinition unitDef;
   struct REW_UnitDefData* unitDefData = (struct REW_UnitDefData*)rewindEntry->data;
   u8* supports = (u8*)rewindEntry->data;
   struct REW_UnitChangeData* unitChangeData;
@@ -361,7 +473,7 @@ void REW_storeCombatDataDead(struct Unit* unit,
   if ((UNIT_FACTION(unit) == FACTION_BLUE) && (!UNIT_IS_PHANTOM(unit))) {
     
     // Unit won't get cleared.
-    rewindEntry->flags = REW_UNITDIED_NOCLEAR;
+    rewindEntry->flags = unit->index | REW_UNITDIED_NOCLEAR;
     
     // Track supports. These will be cleared post-death.
     unitSupporterCount = GetUnitSupporterCount(unit);
@@ -378,8 +490,12 @@ void REW_storeCombatDataDead(struct Unit* unit,
     // Copy unit.
     CpuCopy32(unit, &referenceUnit, REW_UNITSIZE);
 
-    // Apply these changes, which will be applied once unit dies, to the referenceUnit.
-    referenceUnit.state |= US_DEAD | US_HIDDEN;
+    // Apply these changes, which will be applied postcombat, to the referenceUnit.
+    referenceUnit.state |= postCombatStateMask;
+    
+    // Remove ballista if unit is riding one.
+    referenceUnit.state &= ~US_IN_BALLISTA;
+    referenceUnit.ballistaIndex = 0;
     
     // Set unitChangeData to be after supports.
     unitChangeData = (struct REW_UnitChangeData*)((u32)supports + unitSupporterCount);
@@ -403,30 +519,8 @@ void REW_storeCombatDataDead(struct Unit* unit,
     unitDefData->xPosition =          xPrev;
     unitDefData->yPosition =          yPrev;
     
-    // Build unitDefinition out of unitDefData.
-    // TODO make separate function.
-    unitDef.charIndex =       unitDefData->charIndex;
-    unitDef.classIndex =      unitDefData->classIndex;
-    unitDef.leaderCharIndex = 0;
-    unitDef.autolevel =       0;
-    unitDef.allegiance =      unitDefData->allegiance;
-    unitDef.level =           unitDefData->level;
-    unitDef.xPosition =       unitDefData->xPosition;
-    unitDef.yPosition =       unitDefData->yPosition;
-    unitDef.genMonster =      0;
-    unitDef.itemDrop =        unitDefData->itemDrop;
-    unitDef.unk_05_7 =        0;
-    unitDef.extraData =       0;
-    unitDef.redaCount =       0;
-    unitDef.redas =           NULL;
-    for (i = 0; i < UNIT_DEFINITION_ITEM_COUNT; i++) { unitDef.items[i] = 0; }
-    for (i = 0; i < UDEF_AIIDX_MAX; i++) { unitDef.ai[i] = 0; }
-    
-    // Clear unit.
-    CpuFill32(0, &referenceUnit, REW_UNITSIZE);
-    
-    // Load unit from unitDefinition.
-    UnitInitFromDefinition(&referenceUnit, &unitDef);
+    // Load unit from unitDefData.
+    REW_loadUnit(&referenceUnit, unitDefData);
     
     // Copy over differences we don't want to track.
     referenceUnit.exp = 0xFF;               // non-blue and phantom units don't gain exp.
@@ -435,18 +529,18 @@ void REW_storeCombatDataDead(struct Unit* unit,
     referenceUnit.pMapSpriteHandle = unit->pMapSpriteHandle;   // Need a new one when reloading.
     
     // Set unitChangeData to after unitDefData
-    unitChangeData = (struct REW_UnitChangeData*)((u32)unitDefData + (u32)REW_ENTRY_UNITDEFDATA_BASESIZE);
+    unitChangeData = (struct REW_UnitChangeData*)((u32)unitDefData + (u32)REW_ENTRY_UNITDEFDATA_SIZE);
     
     // Set initial entry size.
     rewindEntry->size = REW_ENTRY_BASESIZE +
-                        REW_ENTRY_UNITDEFDATA_BASESIZE +
+                        REW_ENTRY_UNITDEFDATA_SIZE +
                         REW_ENTRY_UNITCHANGEDATA_BASESIZE;
   }
   
   // Now store changes of unit.
   //  - Generic changes.
-  u8* unit1 = (u8*)unit;
-  u8* unit2 = (u8*)&referenceUnit;
+  u8* unit1 = (u8*)&referenceUnit;
+  u8* unit2 = (u8*)unit;
 
   for (i = 0; i < REW_UNITSIZE; i++) {
     diff = unit1[i] - unit2[i];
@@ -473,6 +567,16 @@ void REW_storeCombatDataDead(struct Unit* unit,
     }
   }
   
+  //  - Ballista uses. BattleApplyBallistaUpdates, 0x802C300.
+  if (unit->ballistaIndex != 0 && bu->weapon != 0) {
+    diff = GetItemUses(bu->weapon) - GetTrap(unit->ballistaIndex)->data[TRAP_EXTDATA_BLST_ITEMUSES];
+    if (diff) {
+      unitChangeData[changeIdx].offs = REW_UNITOFFS_BALLISTA_USES;
+      unitChangeData[changeIdx].diff = diff;
+      changeIdx += 1;
+    }
+  }
+  
   // Finish setting entry size and set corresponding sequence size.
   rewindEntry->size += changeIdx * 2;
   if (rewindSeq->size == 0) { rewindSeq->size = REW_SEQUENCE_BASESIZE; }
@@ -496,35 +600,37 @@ void REW_actionCombat() {
   
   if (gBattleActor.unit.curHP == 0) {
     // TODO handle death.
-    //  - PidStatsRecordBattleRes, record win if actor is blue.
-    //  - TryRemoveUnitFromBallista
+    //  -- PidStatsRecordBattleRes, record win if actor is blue.
+    //  -- Dead enemies get cleared from Unit* array.
+    //  -- TryRemoveUnitFromBallista
     //  - Item drop
     //  - Rescue drop
-    //  - Dead enemies get cleared from Unit* array.
-    
+
+    // Unset this value. Unit isn't hidden before combat,
+    // but is hidden right now due to MU taking the place of standingSprite.
+    // Unit will also be hidden post-combat (due to dying), so we need to
+    // unset this bit to track that difference.
+    actor->state &= ~US_HIDDEN;
+
     REW_storeCombatDataDead(actor,
                             &gBattleActor,
-                            gBattleStats.config & BATTLE_CONFIG_BALLISTA,
+                            US_HIDDEN | US_UNSELECTABLE | US_DEAD,
                             (s8)gActiveUnitMoveOrigin.x,
                             (s8)gActiveUnitMoveOrigin.y,
                             rewindSeq,
                             rewindEntry);
     
+    // Re-set this value.
+    actor->state |= US_HIDDEN;
+    
   } else {
-    
-    // Set this here to store this change which will happen post-battle.
-    gBattleActor.unit.state |= US_UNSELECTABLE;
-    
     REW_storeCombatData(actor,
                         &gBattleActor,
-                        gBattleStats.config & BATTLE_CONFIG_BALLISTA,
+                        US_HIDDEN | US_UNSELECTABLE,
                         (s8)gActiveUnitMoveOrigin.x,
                         (s8)gActiveUnitMoveOrigin.y,
                         rewindSeq,
                         rewindEntry);
-    
-    // Unset this again.
-    gBattleActor.unit.state &= ~US_UNSELECTABLE;
   }
   
   // Target.
@@ -535,25 +641,23 @@ void REW_actionCombat() {
     
     if (gBattleTarget.unit.curHP == 0) {
       // TODO handle death.
-      //  - PidStatsRecordBattleRes, record loss if target is blue.
-      //  - TryRemoveUnitFromBallista
+      //  -- PidStatsRecordBattleRes, record loss if target is blue.
+      //  -- Dead enemies get cleared from Unit* array.
+      //  -- TryRemoveUnitFromBallista
       //  - Item drop
       //  - Rescue drop
-      //  - Dead enemies get cleared from Unit* array.
       
       REW_storeCombatDataDead(target,
                               &gBattleTarget,
-                              false,                // FIXME, could target not be in ballista?
+                              US_HIDDEN | US_DEAD,
                               target->xPos,
                               target->yPos,
                               rewindSeq,
                               rewindEntry);
-                         
     } else {
-      
       REW_storeCombatData(target,
                           &gBattleTarget,
-                          false,                   // FIXME, could target not be in ballista?
+                          0,
                           target->xPos,
                           target->yPos,
                           rewindSeq,
