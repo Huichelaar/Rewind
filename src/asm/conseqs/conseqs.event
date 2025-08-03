@@ -1,0 +1,48 @@
+// Hooks to different consequences (events, but other things as well)
+// that can happen/run as a result of actions.
+// Idea is to store these in rewind buffer so they can be rewound.
+
+PUSH
+
+  // Unit loading.
+    ORG 0xF770
+      jumpToHack(REW_hookLoadUnit)
+    ORG 0xFF42
+      SHORT 0x0       // NOP
+      jumpToHack(REW_hookEnun)
+      SHORT 0x0       // NOP
+
+  // Track item inventory changes.
+    // - What if convoy is full?
+    //   TODO, think about this!
+  
+    // - Inventory not full.
+    //   TODO
+  
+    //  - Inventory full,
+    //    supply unavailable,
+    //    discard one of the not-just-obtained items.
+    ORG 0x1E2B4
+    //    TODO
+    
+    //  - Inventory full,
+    //    supply unavailable,
+    //    discard the just obtained item.
+    // No need to track anything as neither inventory nor supply changes.
+      
+    //  - Inventory full,
+    //    supply available,
+    //    send one of the not-just-obtained items to supply.
+    ORG 0x1E188
+    //    TODO
+    
+    //  - Inventory full,
+    //    supply available,
+    //    send the just obtained item to supply.
+    ORG 0x1E1DC
+    //    TODO
+
+POP
+
+ALIGN 4;
+#include "loadUnit.lyn.event"

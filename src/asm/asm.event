@@ -1,12 +1,14 @@
 #include "actions/actions.event"
-#include "events/events.event"
+#include "conseqs/conseqs.event"
 
 PUSH
 
   // Run an additional routine when starting chapters
-  // TODO this could be moved to a generic ChapterBeginCalcloop.
   ORG 0x59A23C
     POIN REW_chapterBeginCalcLoop | 1
+    PROTECT 0x59A23C      // If EA complains due to this line, you may already have a
+                          // ChapterBeginCalcLoop. In that case, Add the entries under
+                          // REW_chapterBeginCalcLoopEntries to your calcloop and remove this change..
   
   // Additional save to ensure phase-change is saved for all factions.
   ORG 0x5A7F14
@@ -33,7 +35,7 @@ ALIGN 4; REW_chapterBeginCalcLoopEntries:    // 0-terminated
 POIN 0x85971    // SetEventId_0x84. Calcloop replaced this call.
 POIN REW_clearCurSequence | 1
 POIN REW_clearRewindBuf | 1
-WORD 0
+WORD 0          // Terminator.
 
 ALIGN 4; REW_hookHideUnderRoof:
 #include "hideUnderRoof.lyn.event"

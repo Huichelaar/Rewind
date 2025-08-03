@@ -101,6 +101,10 @@ void REW_undoCombat(struct REW_RewindEntry* entry) {
     
     // support array is not unitChangeData, so remove from changeCount.
     changeCount -= unitSupporterCount;
+  } else if (!UNIT_IS_VALID(unit)) {
+    
+    // Could not find unit.
+    return;
   }
   
   s8 xPost = unit->xPos;
@@ -186,6 +190,10 @@ void REW_redoCombat(struct REW_RewindEntry* entry) {
     
     // support array is not unitChangeData, so remove from changeCount.
     changeCount -= unitSupporterCount;
+  } else if (!UNIT_IS_VALID(unit)) {
+    
+    // Could not find unit.
+    return;
   }
   
   s8 xPrev = unit->xPos;

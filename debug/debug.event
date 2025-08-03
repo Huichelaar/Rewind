@@ -19,6 +19,11 @@
 #include "map/maps.event"
 
 PUSH
+
+  // Enable convoy everywhere.
+  ORG 0x3161C
+  SHORT 0x2001      // mov r0, #0x1
+  SHORT 0x4770      // bx r14
   
   // Ch0 wall health
   ORG 0x8B08BC
