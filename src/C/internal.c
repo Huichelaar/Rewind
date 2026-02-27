@@ -101,6 +101,68 @@ int REW_isRedoAvailable(struct REW_RewindSequence* sequence) {
   return true;
 }
 
+// Return if entry's difftype corresponds to an action taken by a unit.
+int REW_isUnitAction(int diffType) {
+  
+  // TODO
+  
+  return 0;
+}
+
+// Searches unitData for X and Y coordinate difference
+// and returns these (call by reference).
+void REW_getCoordinateDifference(struct REW_UnitChangeData* unitChangeData, u16 size, s8* xDiff, s8* yDiff) {
+  int i = 0;
+  *xDiff = 0;
+  *yDiff = 0;
+  int foundX = false;
+  int foundY = false;
+  
+  while (i * 2 < size) {
+    
+    if (unitChangeData[i].offs == REW_UNITOFFS_X) {
+      *xDiff = (s8)unitChangeData[i].diff;
+      foundX = true;
+    }
+    
+    if (unitChangeData[i].offs == REW_UNITOFFS_Y) {
+      *yDiff = (s8)unitChangeData[i].diff;
+      foundY = true;
+    }
+    
+    if (foundX && foundY)
+      break;
+    
+    i++;
+  }
+}
+
+// Given REW_UnitData, return unitID.
+// Looks for the unitID in the gBmMapUnit.
+// arg size is the size of the unitData.
+u8 REW_getUnitID(struct REW_UnitData* unitData, u16 size, u8 mode) {
+  s8 xDiff = 0;
+  s8 yDiff = 0;
+  
+  // For UNDO we need to apply coordinate difference to
+  // original coordinate before action was taken.
+  if (mode == REW_FINDUNIT_UNDO) {
+    
+    REW_getCoordinateDifference(unitData->unitChangeData, size - REW_ENTRY_UNITDATA_BASESIZE, &xDiff, &yDiff);
+    return gBmMapUnit[unitData->y + yDiff][unitData->x + xDiff];
+  
+  // For REDO we need to use the
+  // original coordinate before action was taken.
+  } else if (mode == REW_FINDUNIT_REDO) {
+
+    return gBmMapUnit[unitData->y][unitData->x];
+    
+  }
+  
+  // You gotta pick between the two modes.
+  return 0;
+}
+
 // Need to hide units again if we:
 //  - undo a de-roofing.
 //  - redo a roofing.
@@ -118,7 +180,7 @@ void REW_hideRoofedUnits() {
 }
 
 // Load unit out of REW_UnitDefData.
-void REW_loadUnit(struct Unit* unit, struct REW_UnitDefData* unitDefData) {
+void REW_loadUnit(struct Unit* unit, struct REW_UnitDefData* unitDefData, s8 x, s8 y) {
   struct UnitDefinition unitDef;
   int i;
   
@@ -128,8 +190,8 @@ void REW_loadUnit(struct Unit* unit, struct REW_UnitDefData* unitDefData) {
   unitDef.autolevel =       0;
   unitDef.allegiance =      unitDefData->allegiance;
   unitDef.level =           unitDefData->level;
-  unitDef.xPosition =       unitDefData->xPosition;
-  unitDef.yPosition =       unitDefData->yPosition;
+  unitDef.xPosition =       x;
+  unitDef.yPosition =       y;
   unitDef.genMonster =      0;
   unitDef.itemDrop =        unitDefData->itemDrop;
   unitDef.unk_05_7 =        0;

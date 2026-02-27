@@ -36,6 +36,11 @@ void REW_undo(struct REW_RewindSequence* sequence) {
         REW_undoLoadUnit(entry);
         break;
       
+      // Item obtained (Steal / loot defeated enemy / loot chest).
+      case REW_CONSEQ_ITEMOBTAINED:
+        //REW_undoItemObtained(sequence, entry);
+        break;
+      
       default:
         break;
     }
@@ -71,6 +76,11 @@ void REW_redo(struct REW_RewindSequence* sequence) {
       case REW_CONSEQ_UNITLOAD_INIT:
       case REW_CONSEQ_UNITLOAD_FINAL:
         REW_redoLoadUnit(entry);
+        break;
+      
+      // Item obtained (Steal / loot defeated enemy / loot chest).
+      case REW_CONSEQ_ITEMOBTAINED:
+        //REW_redoItemObtained(sequence, entry);
         break;
       
       default:

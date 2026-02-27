@@ -77,7 +77,7 @@ void REW_displayActor(struct REW_ProcState* proc, struct REW_RewindEntry* rewind
   if (rewindEntry->flags == REW_UNITDIED_CLEARED) {
     
     // Unit died and got cleared. Create temporary unit instead.
-    REW_loadUnit(&referenceUnit, (struct REW_UnitDefData*)rewindEntry->data);
+    REW_loadUnit(&referenceUnit, (struct REW_UnitDefData*)rewindEntry->data, 0, 0);
     unit = &referenceUnit;
   } else if ((rewindEntry->flags & REW_UNITDIED_NOCLEAR) == REW_UNITDIED_NOCLEAR) {
     
@@ -112,7 +112,7 @@ void REW_displayTarget(struct REW_ProcState* proc, struct REW_RewindEntry* rewin
     if (rewindEntry->flags == REW_UNITDIED_CLEARED) {
       
       // Unit died and got cleared. Create temporary unit instead.
-      REW_loadUnit(&referenceUnit, (struct REW_UnitDefData*)rewindEntry->data);
+      REW_loadUnit(&referenceUnit, (struct REW_UnitDefData*)rewindEntry->data, 0, 0);
       unit = &referenceUnit;
     } else if ((rewindEntry->flags & REW_UNITDIED_NOCLEAR) == REW_UNITDIED_NOCLEAR) {
     

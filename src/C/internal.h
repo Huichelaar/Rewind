@@ -26,9 +26,9 @@ enum {
   REW_SEQUENCE_BASESIZE = 4,
   REW_ENTRY_BASESIZE = 4,
   REW_ENTRY_PHASECHANGEDATA_BASESIZE = 0,
-  REW_ENTRY_UNITCHANGEDATA_BASESIZE = 0,
+  REW_ENTRY_UNITDATA_BASESIZE = 2,
   REW_ENTRY_OBSTACLE_BASESIZE = 4,
-  REW_ENTRY_UNITDEFDATA_SIZE = 5,
+  REW_ENTRY_UNITDEFDATA_SIZE = 3,
   REW_PHASECHANGEBUFFER_ENTRYSIZE = 8,      // Preferably a power of 2.
   
   // diffTypes. First 0x3F values are reserved for actions,
@@ -38,6 +38,7 @@ enum {
   REW_CONSEQ_UNITCHANGE =     0x42,
   REW_CONSEQ_UNITLOAD_INIT =  0x43,
   REW_CONSEQ_UNITLOAD_FINAL = 0x44,
+  REW_CONSEQ_ITEMOBTAINED =   0x45,
   
   // REW_RewindPhaseChangeData.flags.
   REW_PHASE_PRE_ALLY =    0x0,
@@ -54,11 +55,18 @@ enum {
   // Obstacle flags.
   REW_OBSTACLE_SNAG = 0x1,
   
+  // unitID modes used when searching for unitID
+  // in gBmMapUnit.
+  REW_FINDUNIT_UNDO = 0x0,
+  REW_FINDUNIT_REDO = 0x1,
+  
   // Unit change flags.
   REW_UNITDIED_CLEARED = 0xFF,
   REW_UNITDIED_NOCLEAR = 0xC0,        // Only blue units don't get cleared; Top two bits are available.
 
   // 'Special' unit changes.
+  REW_UNITOFFS_X =           0x10,
+  REW_UNITOFFS_Y =           0x11,
   REW_UNITOFFS_BALLISTA_ID = 0x1C,    // Allows for adjusting ballista trap.
   
   // Additional 'unit' changes.
@@ -91,12 +99,19 @@ struct REW_RewindBuffer {
 };
 extern struct REW_RewindBuffer* REW_rewindBuffer;
 
-// Rewind entry data.
-// Size varies based on how many attributes were changed.
+// Part of REW_UnitData.
 struct REW_UnitChangeData {
   /* 00 */ u8 offs;                       // Offset of changed attribute (HP, exp, etc.)
   /* 01 */ u8 diff;                       // Relative difference of attribute pre-change vs post-change
 };                                        // or absolute value post-change if unit was cleared.
+
+// Rewind entry data.
+// Size varies based on how many attributes were changed.
+struct REW_UnitData {
+  /* 00 */ s8 x;
+  /* 01 */ s8 y;
+  /* 02 */ struct REW_UnitChangeData unitChangeData[];
+};
 
 // Rewind entry data.
 // Used for units that get cleared when they die.
@@ -108,10 +123,6 @@ struct REW_UnitDefData {
   /* 02 */ u8 itemDrop   : 1;
   /* 02 */ u8 allegiance : 2;
   /* 02 */ u8 level      : 5;
-  /* 03 */ u8 xPosition  : 6;
-  /* 03 */ u8 pad1       : 2;             // 2 separate pads, as 1 pad was netting me 
-  /* 04 */ u8 yPosition  : 6;             // "note: offset of packed bit-field <attribute-name>
-  /* 04 */ u8 pad2       : 2;             // has changed in GCC 4.4" messages.
 } __attribute__((packed));
 
 void REW_clearRewindSeq(struct REW_RewindSequence* sequence);
@@ -125,8 +136,11 @@ void REW_alignSequence(struct REW_RewindSequence* sequence);
 
 int REW_isUndoAvailable(struct REW_RewindSequence* sequence);
 int REW_isRedoAvailable(struct REW_RewindSequence* sequence);
+int REW_isUnitAction(int diffType);
 
+void REW_getCoordinateDifference(struct REW_UnitChangeData* unitChangeData, u16 size, s8* xDiff, s8* yDiff);
+u8 REW_getUnitID(struct REW_UnitData* unitData, u16 size, u8 mode);
 void REW_hideRoofedUnits();
-void REW_loadUnit(struct Unit* unit, struct REW_UnitDefData* unitDefData);
+void REW_loadUnit(struct Unit* unit, struct REW_UnitDefData* unitDefData, s8 x, s8 y);
 
 #endif // INTERNAL_H

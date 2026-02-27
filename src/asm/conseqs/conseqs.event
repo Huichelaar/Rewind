@@ -13,36 +13,63 @@ PUSH
       SHORT 0x0       // NOP
 
   // Track item inventory changes.
-    // - What if convoy is full?
-    //   TODO, think about this!
   
-    // - Inventory not full.
-    //   TODO
+    // Item obtained through loot drop or chest.
+    /*
+    ORG 0x1E0A2       // Inventory may or may not be full.
+      SHORT 0x0       // NOP
+      jumpToHack(REW_hookLootChestReceive1)
+    ORG 0x1E188       // Inventory full, send different item to convoy.
+      jumpToHack(REW_hookLootChestReceive2)
+    ORG 0x1E1DC       // Inventory full, send obtained item to convoy.
+      jumpToHack(REW_hookLootChestReceive3)
+    ORG 0x1E2B2       // Inventory full, convoy full/unavailable. discard different item.
+      SHORT 0x0       // NOP
+      jumpToHack(REW_hookLootChestReceive4)
+    */
   
-    //  - Inventory full,
-    //    supply unavailable,
-    //    discard one of the not-just-obtained items.
-    ORG 0x1E2B4
-    //    TODO
+    // Item obtained through drop/steal/chest.
+  
+      // - Inventory not full.
+      //   TODO
     
-    //  - Inventory full,
-    //    supply unavailable,
-    //    discard the just obtained item.
-    // No need to track anything as neither inventory nor supply changes.
+      //  - Inventory full,
+      //    supply unavailable/full,
+      //    discard one of the not-just-obtained items.
+      ORG 0x1E2B4
+      //    TODO
       
-    //  - Inventory full,
-    //    supply available,
-    //    send one of the not-just-obtained items to supply.
-    ORG 0x1E188
-    //    TODO
+      //  - Inventory full,
+      //    supply unavailable/full,
+      //    discard the just obtained item.
+      // No need to track anything as neither inventory nor supply changes.
+        
+      //  - Inventory full,
+      //    supply available,
+      //    send one of the not-just-obtained items to supply.
+      ORG 0x1E188
+      //    TODO
+      
+      //  - Inventory full,
+      //    supply available,
+      //    send the just obtained item to supply.
+      ORG 0x1E1DC
+      //    TODO
     
-    //  - Inventory full,
-    //    supply available,
-    //    send the just obtained item to supply.
-    ORG 0x1E1DC
-    //    TODO
+    // Trading with supply.
+    
+      // - Take from supply.
+      ORG 0x9E2C8
+      //   TODO
+      
+      // - Give to supply.
+      ORG 0x9E85C
+      //   TODO
+      
+    // Trading with other unit.
+      // TODO
 
 POP
 
-ALIGN 4;
-#include "loadUnit.lyn.event"
+ALIGN 4; #include "loadUnit.lyn.event"
+//ALIGN 4; #include "itemDrop.lyn.event"

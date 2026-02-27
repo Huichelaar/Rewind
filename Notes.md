@@ -48,7 +48,7 @@ REW_unitInventoryReorder:
     - Unit index byte.
   If entry immediately before this one is also a REW_unitInventoryReorder for the same unit (player is equipping different items on this unit) then we should merge the two.
   
-  Is there some way to merge equip -> discard -> equip? Maybe not very relevant as I assume not many players will even discard items when they're not forced to.
+  No need to merge equip -> discard -> equip as a unit can only discard so many items per action (5 of their own, 5 from convoy, 5 from a trade).
   
 REW_unitInventoryChange
   Invoked when discarding or obtaining an item.
